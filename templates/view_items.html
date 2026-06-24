@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+{% block title %}View All Items{% endblock %}
+{% block content %}
+
+<div class="page-header">
+  <div>
+    <div class="breadcrumb"><a href="/">Home</a><span>/</span>All Items</div>
+    <h1 class="page-title"><i class="fas fa-th-large"></i>All Lost &amp; Found Items</h1>
+    <div class="page-subtitle">{{ items|length }} items found
+      {% if search_q %} matching "<strong>{{ search_q }}</strong>"{% endif %}
+    </div>
+  </div>
+  <div style="display:flex;gap:10px;flex-wrap:wrap">
+    <a href="/lost"  class="btn btn-danger  btn-sm"><i class="fas fa-search-minus"></i> Report Lost</a>
+    <a href="/found" class="btn btn-success btn-sm"><i class="fas fa-search-plus"></i> Report Found</a>
+  </div>
+</div>
+
+<!-- ── Filter Bar ──────────────────────────────────────────── -->
+<form method="GET" action="/view">
+  <div class="filter-bar reveal">
+    <div class="filter-search-wrap">
+      <i class="fas fa-search"></i>
+      <input type="text" class="filter-search-input" name="q" id="filterSearch"
+             value="{{ search_q }}" placeholder="Search items, location, category…">
+    </div>
+
+    <button type="button" class="voice-btn" id="voiceSearchBtn" title="Voice Search">
+      <i class="fas fa-microphone"></i>
+    </button>
+
+    <select class="filter-select" name="type">
+      <option value="">All Types</option>
+      <option value="Lost"  {% if type_filter=='Lost'  %}selected{% endif %}>Lost</option>
+      <option value="Found" {% if type_filter=='Found' %}selected{% endif %}>Found</option>
+    </select>
+
+    <select class="filter-select" name="category">
+      <option value="">All Categories</option>
+      {% for cat in categories %}
+      <option value="{{ cat }}" {% if category_filter==cat %}selected{% endif %}>{{ cat }}</option>
+      {% endfor %}
+    </select>
+
+    <select class="filter-select" name="status">
+      <option value="">All Status</option>
+      <option value="Active"    {% if status_filter=='Active'    %}selected{% endif %}>Active</option>
+      <option value="Claimed"   {% if status_filter=='Claimed'   %}selected{% endif %}>Claimed</option>
+      <option value="Recovered" {% if status_filter=='Recovered' %}selected{% endif %}>Recovered</option>
+    </select>
+
+    <select class="filter-select" name="location">
+      <option value="">All Locations</option>
+      {% for loc in locations %}
+      <option value="{{ loc }}" {% if location_filter==loc %}selected{% endif %}>{{ loc }}</option>
+      {% endfor %}
+    </select>
+
+    <!-- Date range filters -->
+    <div style="display: flex; gap: 8px; align-items: center; background: rgba(255, 255, 255, 0.05); padding: 4px 8px; border-radius: var(--radius-sm); border: 1px solid var(--border)">
+      <span style="font-size: 11px; color: var(--text-muted)">From:</span>
+      <input type="date" class="filter-select" name="date_from" value="{{ date_from }}" style="background: none; border: none; padding: 0; font-size: 12px; color: var(--text-primary)">
+      <span style="font-size: 11px; color: var(--text-muted)">To:</span>
+      <input type="date" class="filter-select" name="date_to" value="{{ date_to }}" style="background: none; border: none; padding: 0; font-size: 12px; color: var(--text-primary)">
+    </div>
+
+    <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-filter"></i> Filter</button>
+    <a href="/view" class="btn btn-ghost btn-sm"><i class="fas fa-times"></i> Clear</a>
+  </div>
+</form>
+
+<!-- ── Quick Stats Bar ─────────────────────────────────────── -->
+<div style="display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap" class="reveal">
+  <div class="tag tag-danger"><i class="fas fa-search-minus"></i> Lost: {{ stats.lost }}</div>
+  <div class="tag tag-success"><i class="fas fa-search-plus"></i> Found: {{ stats.found }}</div>
+  <div class="tag tag-primary"><i class="fas fa-check-circle"></i> Recovered: {{ stats.recovered }}</div>
+  <div class="tag tag-warning"><i class="fas fa-clock"></i> Pending Claims: {{ stats.claims }}</div>
+</div>
+
+<!-- ── Skeleton Loading (hidden once loaded) ──────────────── -->
+<div id="skeletonGrid" style="display:none;margin-bottom:20px">
+  <div class="items-grid">
+    {% for _ in range(6) %}
+    <div class="skeleton-card">
+      <div class="skeleton sk-img"></div>
+      <div style="padding:14px">
+        <div class="skeleton sk-line long"></div>
+        <div class="skeleton sk-line medium" style="margin-top:8px"></div>
+        <div class="skeleton sk-line short" style="margin-top:8px"></div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- ── Items Grid ──────────────────────────────────────────── -->
+{% if items %}
+<div class="items-grid stagger" id="itemsGrid">
+  {% for item in items %}
+  <div class="item-col">
+    <div class="item-card"
+         data-search="{{ item['type']|lower }} {{ (item['item_name'] or '')|lower }} {{ item['description']|lower }} {{ item['location']|lower }} {{ (item['category'] or '')|lower }}"
+         onclick="window.location.href='/item/{{ item['id'] }}'">
+
+      <div style="position:relative;overflow:hidden;height:180px">
+        <img src="{{ url_for('static', filename='uploads/' + item['image']) }}"
+             alt="Item Image" class="item-card-image"
+             onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22200%22 height=%22180%22><rect width=%22100%25%22 height=%22100%25%22 fill=%22%23111827%22/><text x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23475569%22 font-size=%2248%22>📦</text></svg>'">
+        <span class="item-card-badge badge-{{ item['type']|lower }}">{{ item['type'] }}</span>
+        {% if item['is_emergency'] %}<span class="emergency-badge">🚨 URGENT</span>{% endif %}
+        {% if item['status'] == 'Recovered' %}
+        <div style="position:absolute;inset:0;background:rgba(16,185,129,0.3);display:flex;align-items:center;justify-content:center">
+          <span style="font-size:32px">✅</span>
+        </div>
+        {% endif %}
+      </div>
+
+      <div class="item-card-body">
+        <div class="item-card-title">
+          {{ item['item_name'] or item['description'][:35] or 'Item' }}
+        </div>
+        <div class="item-card-meta">
+          <span><i class="fas fa-map-marker-alt"></i>{{ item['location'] }}</span>
+          <span><i class="fas fa-tag"></i>{{ item['category'] or 'Other' }}</span>
+          <span><i class="fas fa-user"></i>{{ item['name'] }}</span>
+        </div>
+      </div>
+
+      <div class="item-card-footer">
+        <div class="view-count"><i class="fas fa-eye"></i> {{ item['view_count'] or 0 }}</div>
+        <span class="tag tag-{{ 'success' if item['status']=='Recovered' else 'warning' if item['status']=='Claimed' else 'info' }}"
+              style="font-size:10px">{{ item['status'] or 'Active' }}</span>
+        <span style="font-size:11px;color:var(--text-muted)" data-time="{{ item['date'] }}">{{ item['date'][:10] if item['date'] else '' }}</span>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- Pagination -->
+{% if total_pages > 1 %}
+<div class="pagination" style="display:flex;justify-content:center;align-items:center;gap:8px;margin-top:32px;margin-bottom:20px" class="reveal">
+  {% if page > 1 %}
+  <a href="{{ url_for('view_items', page=page-1, q=search_q, type=type_filter, category=category_filter, status=status_filter, location=location_filter, date_from=date_from, date_to=date_to) }}" class="btn btn-outline btn-sm">Prev</a>
+  {% endif %}
+  
+  {% for p in range(1, total_pages + 1) %}
+    {% if p == page %}
+    <span class="btn btn-primary btn-sm" style="pointer-events:none">{{ p }}</span>
+    {% else %}
+    <a href="{{ url_for('view_items', page=p, q=search_q, type=type_filter, category=category_filter, status=status_filter, location=location_filter, date_from=date_from, date_to=date_to) }}" class="btn btn-outline btn-sm">{{ p }}</a>
+    {% endif %}
+  {% endfor %}
+  
+  {% if page < total_pages %}
+  <a href="{{ url_for('view_items', page=page+1, q=search_q, type=type_filter, category=category_filter, status=status_filter, location=location_filter, date_from=date_from, date_to=date_to) }}" class="btn btn-outline btn-sm">Next</a>
+  {% endif %}
+</div>
+{% endif %}
+
+<!-- Empty after filter (JS-driven) -->
+<div id="itemsEmpty" class="empty-state" style="display:none">
+  <div class="empty-icon"><i class="fas fa-search"></i></div>
+  <div class="empty-title">No items match your search</div>
+  <div class="empty-sub">Try different keywords or clear the filters</div>
+  <a href="/view" class="btn btn-primary btn-sm">Clear Filters</a>
+</div>
+
+{% else %}
+<div class="empty-state reveal">
+  <div class="empty-icon"><i class="fas fa-inbox"></i></div>
+  <div class="empty-title">No Items Reported Yet</div>
+  <div class="empty-sub">Be the first to report a lost or found item to help our community!</div>
+  <div style="display:flex;gap:10px;margin-top:8px;flex-wrap:wrap;justify-content:center">
+    <a href="/lost"  class="btn btn-danger  btn-sm">Report Lost</a>
+    <a href="/found" class="btn btn-success btn-sm">Report Found</a>
+  </div>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Keyboard shortcut: live search without form submit
+document.getElementById('filterSearch')?.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    e.target.form?.submit();
+  }
+});
+</script>
+{% endblock %}

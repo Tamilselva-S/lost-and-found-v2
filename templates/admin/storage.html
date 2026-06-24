@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% block title %}Storage Room{% endblock %}
+{% block content %}
+
+<div class="page-header reveal">
+  <div>
+    <div class="breadcrumb"><a href="/">Home</a><span>/</span><a href="/dashboard">Dashboard</a><span>/</span>Storage</div>
+    <h1 class="page-title"><i class="fas fa-warehouse"></i>Virtual Storage Room</h1>
+    <div class="page-subtitle">Manage physical storage locations for found items</div>
+  </div>
+</div>
+
+<!-- ── Assign New Item ─────────────────────────────────────── -->
+{% if unassigned %}
+<div class="glass-card reveal" style="margin-bottom:24px">
+  <div class="card-header">
+    <div class="card-title"><i class="fas fa-plus-circle"></i>Assign Item to Storage</div>
+    <span class="tag tag-info">{{ unassigned|length }} unassigned</span>
+  </div>
+  <div class="card-body">
+    <form action="/admin/storage/assign" method="POST">
+      <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr auto;gap:12px;align-items:end">
+        <div>
+          <label class="form-label">Select Item</label>
+          <select class="form-control" name="item_id" required>
+            <option value="">Choose item…</option>
+            {% for item in unassigned %}
+            <option value="{{ item['id'] }}">{{ item['item_name'] or item['description'][:40] }} — {{ item['location'] }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label class="form-label">Rack Number</label>
+          <input type="text" class="form-control" name="rack_number" placeholder="e.g., A1" required>
+        </div>
+        <div>
+          <label class="form-label">Shelf Number</label>
+          <input type="text" class="form-control" name="shelf_number" placeholder="e.g., S3" required>
+        </div>
+        <div>
+          <label class="form-label">Expiry (Days)</label>
+          <select class="form-control" name="expiry_days">
+            <option value="30">30 Days</option>
+            <option value="60">60 Days</option>
+            <option value="90" selected>90 Days</option>
+          </select>
+        </div>
+        <div>
+          <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Assign</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+{% endif %}
+
+<!-- ── Storage Items ───────────────────────────────────────── -->
+<div class="glass-card reveal">
+  <div class="card-header">
+    <div class="card-title"><i class="fas fa-boxes"></i>Storage Inventory</div>
+    <span class="tag tag-primary">{{ items_in_storage|length }} items</span>
+  </div>
+  <div class="card-body" style="padding:0">
+    {% if items_in_storage %}
+    <div class="table-container">
+      <table class="data-table responsive-table">
+        <thead>
+          <tr>
+            <th>Item</th>
+            <th>Category</th>
+            <th>Location Found</th>
+            <th>Rack</th>
+            <th>Shelf</th>
+            <th>Assigned</th>
+            <th>Expiry</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for s in items_in_storage %}
+          {% set days_left = ((s['expiry_date'] | string)[:10]) %}
+          <tr>
+            <td data-label="Item">
+              <a href="/item/{{ s['item_id'] }}" class="text-primary-c" style="font-weight:600">
+                {{ s['description'][:30] }}
+              </a>
+              <br>
+              <span class="tag {{ 'tag-success' if s['type']=='Found' else 'tag-danger' }}" style="font-size:10px">{{ s['type'] }}</span>
+            </td>
+            <td data-label="Category"><span class="cat-pill" style="font-size:11px">{{ s['category'] or 'Other' }}</span></td>
+            <td data-label="Location" style="color:var(--text-muted)">{{ s['location'] if 'location' in s.keys() else '—' }}</td>
+            <td data-label="Rack"><strong style="color:var(--primary-light);font-size:15px">{{ s['rack_number'] }}</strong></td>
+            <td data-label="Shelf"><strong style="color:var(--accent);font-size:15px">{{ s['shelf_number'] }}</strong></td>
+            <td data-label="Assigned" style="font-size:11px;color:var(--text-muted)">{{ s['assigned_date'] }}</td>
+            <td data-label="Expiry">
+              <span class="expiry-badge {{ 'expiry-ok' if s['expiry_date'] > now.strftime('%Y-%m-%d') else 'expiry-expired' }}">
+                {{ s['expiry_date'] }}
+              </span>
+            </td>
+            <td data-label="Status">
+              {% if s['collected'] %}
+              <span class="tag tag-success">✓ Collected</span>
+              {% else %}
+              <span class="tag tag-warning">In Storage</span>
+              {% endif %}
+            </td>
+            <td data-label="Action">
+              {% if not s['collected'] %}
+              <form action="/admin/storage/collect/{{ s['id'] }}" method="POST">
+                <button class="btn btn-success btn-sm" style="padding:4px 8px;font-size:11px"><i class="fas fa-check"></i> Collect</button>
+              </form>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="empty-state" style="padding:64px">
+      <div class="empty-icon"><i class="fas fa-warehouse"></i></div>
+      <div class="empty-title">Storage Room Empty</div>
+      <div class="empty-sub">No items have been assigned to storage yet. Found items will appear here once assigned.</div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+{% endblock %}

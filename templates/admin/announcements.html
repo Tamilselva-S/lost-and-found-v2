@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block title %}Announcements{% endblock %}
+{% block content %}
+
+<div class="page-header reveal">
+  <div>
+    <div class="breadcrumb"><a href="/">Home</a><span>/</span><a href="/dashboard">Dashboard</a><span>/</span>Announcements</div>
+    <h1 class="page-title"><i class="fas fa-bullhorn"></i>Announcements</h1>
+    <div class="page-subtitle">Post campus-wide notices, alerts, and emergency messages</div>
+  </div>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 380px;gap:24px;align-items:start">
+
+  <!-- Announcement List -->
+  <div>
+    <div class="section-header"><div class="section-title"><i class="fas fa-list"></i>All Announcements</div></div>
+    {% if announcements %}
+      {% for ann in announcements %}
+      <div class="glass-card reveal" style="margin-bottom:14px">
+        <div class="card-body">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
+            <div style="flex:1">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+                <span class="tag
+                  {{ 'tag-info' if ann['type']=='info' else
+                     'tag-warning' if ann['type']=='warning' else
+                     'tag-danger' if ann['type']=='danger' else
+                     'tag-success' }}">
+                  <i class="fas fa-{{ 'info-circle' if ann['type']=='info' else 'exclamation-triangle' if ann['type'] in ['warning','danger'] else 'check-circle' }}"></i>
+                  {{ ann['type']|capitalize }}
+                </span>
+                {% if not ann['active'] %}<span class="tag tag-muted">Inactive</span>{% endif %}
+                {% if ann['expires_at'] %}<span class="tag tag-muted" style="font-size:10px">Expires: {{ ann['expires_at'][:10] }}</span>{% endif %}
+              </div>
+              <div style="font-size:15px;font-weight:700;color:var(--text-primary);margin-bottom:6px">{{ ann['title'] }}</div>
+              <div style="font-size:13px;color:var(--text-secondary)">{{ ann['message'] }}</div>
+              <div style="font-size:11px;color:var(--text-muted);margin-top:8px">Posted: {{ ann['created_at'][:16] if ann['created_at'] else '' }}</div>
+            </div>
+            {% if ann['active'] %}
+            <form action="/admin/announcements/delete/{{ ann['id'] }}" method="POST">
+              <button type="submit" class="btn btn-ghost btn-sm btn-icon" title="Deactivate">
+                <i class="fas fa-eye-slash"></i>
+              </button>
+            </form>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    {% else %}
+    <div class="empty-state glass-card reveal" style="padding:64px">
+      <div class="empty-icon"><i class="fas fa-bullhorn"></i></div>
+      <div class="empty-title">No Announcements Yet</div>
+      <div class="empty-sub">Post an announcement to notify the campus community about important updates.</div>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Post Form -->
+  <div class="glass-card reveal">
+    <div class="card-header"><div class="card-title"><i class="fas fa-plus-circle"></i>Post New Announcement</div></div>
+    <div class="card-body">
+      <form action="/admin/announcements" method="POST">
+        <div class="form-group">
+          <label class="form-label"><i class="fas fa-heading"></i>Title</label>
+          <input type="text" class="form-control" name="title" placeholder="Announcement title" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label"><i class="fas fa-align-left"></i>Message</label>
+          <textarea class="form-control" name="message" rows="4" placeholder="Write your announcement here…" required></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label"><i class="fas fa-tag"></i>Type</label>
+          <select class="form-control" name="type">
+            <option value="info">ℹ️ Info</option>
+            <option value="warning">⚠️ Warning</option>
+            <option value="danger">🚨 Emergency</option>
+            <option value="success">✅ Success</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label"><i class="fas fa-calendar"></i>Expires At (Optional)</label>
+          <input type="datetime-local" class="form-control" name="expires_at">
+        </div>
+        <button type="submit" class="btn btn-primary w-100"><i class="fas fa-paper-plane"></i> Post Announcement</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

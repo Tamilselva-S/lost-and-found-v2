@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}Admin Login{% endblock %}
+{% block content %}
+
+<div style="display:flex;justify-content:center;align-items:center;min-height:65vh">
+  <div style="width:100%;max-width:420px">
+
+    <!-- Icon -->
+    <div style="text-align:center;margin-bottom:32px">
+      <div style="
+        width: 72px; height: 72px; border-radius: 50%;
+        background: linear-gradient(135deg, var(--navy), var(--navy-soft));
+        display: flex; align-items: center; justify-content: center;
+        margin: 0 auto 18px; font-size: 28px; color: #fff;
+        box-shadow: 0 0 0 6px rgba(22,50,79,0.1), 0 12px 28px -8px rgba(22,50,79,0.45);
+        animation: pulse 3s ease infinite;
+      ">
+        <i class="fas fa-lock"></i>
+      </div>
+      <h1 style="font-family:'Space Grotesk',sans-serif;font-size:26px;font-weight:700;color:var(--ink);letter-spacing:-0.02em">Admin Portal</h1>
+      <p style="font-size:13.5px;color:var(--slate);margin-top:6px;font-family:'IBM Plex Mono',monospace">Restricted access — authorized personnel only</p>
+    </div>
+
+    <!-- Card -->
+    <div class="glass-card reveal" style="box-shadow:var(--shadow-xl)">
+      <div class="card-body" style="padding:32px">
+        <form method="POST" action="/admin/login">
+          <div class="form-group">
+            <label class="form-label"><i class="fas fa-key"></i> Password</label>
+            <div style="position:relative">
+              <input type="password" class="form-control" name="password"
+                     id="adminPassword" placeholder="Enter admin password"
+                     required autofocus
+                     style="padding-right:48px;letter-spacing:3px;font-size:15px">
+              <button type="button" onclick="togglePass()"
+                      style="position:absolute;right:12px;top:50%;transform:translateY(-50%);
+                             background:none;border:none;color:var(--slate);cursor:pointer;
+                             font-size:15px;padding:4px;transition:color 0.2s"
+                      onmouseover="this.style.color='var(--navy)'"
+                      onmouseout="this.style.color='var(--slate)'"
+                      aria-label="Toggle password visibility">
+                <i class="fas fa-eye" id="eyeIcon"></i>
+              </button>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary w-100" style="padding:13px;font-size:14.5px;margin-top:4px">
+            <i class="fas fa-sign-in-alt"></i> Sign In
+          </button>
+        </form>
+
+        <div style="text-align:center;margin-top:20px">
+          <a href="/" style="font-size:12.5px;color:var(--slate);font-family:'IBM Plex Mono',monospace;transition:color 0.2s"
+             onmouseover="this.style.color='var(--navy)'" onmouseout="this.style.color='var(--slate)'">
+            ← Back to Home
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div style="text-align:center;margin-top:18px;font-size:12px;color:var(--slate);font-family:'IBM Plex Mono',monospace">
+      <i class="fas fa-shield-alt" style="color:var(--amber-deep)"></i> Secured by Tech Titans Auth System
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+function togglePass() {
+  const field = document.getElementById('adminPassword');
+  const icon  = document.getElementById('eyeIcon');
+  if (field.type === 'password') {
+    field.type = 'text';
+    field.style.letterSpacing = '0';
+    icon.className = 'fas fa-eye-slash';
+  } else {
+    field.type = 'password';
+    field.style.letterSpacing = '3px';
+    icon.className = 'fas fa-eye';
+  }
+}
+</script>
+{% endblock %}

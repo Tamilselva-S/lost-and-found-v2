@@ -3,4 +3,3 @@ mysql-connector-python
 yagmail
 fpdf
 gunicorn
-python-dotenv==1.0.1
