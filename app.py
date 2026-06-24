@@ -456,19 +456,14 @@ def lost():
 
         # ✅ Handle both file upload and camera capture (preserved & sanitized)
         if 'camera_image' in request.form and request.form['camera_image']:
-            img_data = request.form['camera_image'].split(",")[1]
-            filename = f"camera_{datetime.now().strftime('%Y%m%d%H%M%S')}.png"
-            filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-            with open(filepath, "wb") as f:
-                f.write(base64.b64decode(img_data))
+            filename = request.form['camera_image']
         else:
-            image    = request.files['image']
+            image = request.files.get('image')
             if image and image.filename:
-                orig_filename = secure_filename(image.filename)
-                base, ext = os.path.splitext(orig_filename)
-                filename = f"{datetime.now().strftime('%Y%m%d%H%M%S')}_{base}{ext}"
-                filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-                image.save(filepath)
+                import base64
+                img_data = base64.b64encode(image.read()).decode('utf-8')
+                mime_type = image.mimetype or 'image/png'
+                filename = f"data:{mime_type};base64,{img_data}"
             else:
                 filename = ""
 
@@ -517,19 +512,14 @@ def found():
 
         # ✅ Handle both file upload and camera capture (preserved & sanitized)
         if 'camera_image' in request.form and request.form['camera_image']:
-            img_data = request.form['camera_image'].split(",")[1]
-            filename = f"camera_{datetime.now().strftime('%Y%m%d%H%M%S')}.png"
-            filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-            with open(filepath, "wb") as f:
-                f.write(base64.b64decode(img_data))
+            filename = request.form['camera_image']
         else:
-            image    = request.files['image']
+            image = request.files.get('image')
             if image and image.filename:
-                orig_filename = secure_filename(image.filename)
-                base, ext = os.path.splitext(orig_filename)
-                filename = f"{datetime.now().strftime('%Y%m%d%H%M%S')}_{base}{ext}"
-                filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-                image.save(filepath)
+                import base64
+                img_data = base64.b64encode(image.read()).decode('utf-8')
+                mime_type = image.mimetype or 'image/png'
+                filename = f"data:{mime_type};base64,{img_data}"
             else:
                 filename = ""
 

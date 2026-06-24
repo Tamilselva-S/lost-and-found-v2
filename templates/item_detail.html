@@ -36,7 +36,7 @@
         <div style="display:grid;grid-template-columns:280px 1fr">
           <!-- Image -->
           <div style="position:relative;overflow:hidden;border-radius:var(--radius-lg) 0 0 var(--radius-lg);cursor:zoom-in" onclick="openLightbox(this.querySelector('img').src)">
-            <img src="{{ url_for('static', filename='uploads/' + item['image']) }}"
+            <img src="{{ item['image'] if item['image'] and item['image'].startswith('data:image') else url_for('static', filename='uploads/' + item['image']) }}"
                  alt="Item" style="width:100%;height:280px;object-fit:cover"
                  onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22280%22 height=%22280%22><rect width=%22100%25%22 height=%22100%25%22 fill=%22%23111827%22/><text x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23475569%22 font-size=%2260%22>📦</text></svg>'">
             <span class="item-card-badge badge-{{ item['type']|lower }}" style="top:14px;left:14px">{{ item['type'] }}</span>
@@ -314,7 +314,7 @@
       <div class="card-body" style="padding:0">
         {% for n in nearby %}
         <a href="/item/{{ n['id'] }}" style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--border);text-decoration:none;transition:var(--transition-fast)" onmouseover="this.style.background='var(--bg-hover)'" onmouseout="this.style.background=''">
-          <img src="{{ url_for('static', filename='uploads/' + n['image']) }}" alt="" style="width:44px;height:44px;object-fit:cover;border-radius:var(--radius-sm)"
+          <img src="{{ n['image'] if n['image'] and n['image'].startswith('data:image') else url_for('static', filename='uploads/' + n['image']) }}" alt="" style="width:44px;height:44px;object-fit:cover;border-radius:var(--radius-sm)"
                onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2244%22 height=%2244%22><rect width=%22100%25%22 height=%22100%25%22 fill=%22%23111827%22/></svg>'">
           <div style="flex:1;min-width:0">
             <div style="font-size:12.5px;font-weight:600;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ n['item_name'] or n['description'][:25] or 'Item' }}</div>

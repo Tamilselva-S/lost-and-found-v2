@@ -103,7 +103,7 @@
          onclick="window.location.href='/item/{{ item['id'] }}'">
 
       <div style="position:relative;overflow:hidden;height:180px">
-        <img src="{{ url_for('static', filename='uploads/' + item['image']) }}"
+        <img src="{{ item['image'] if item['image'] and item['image'].startswith('data:image') else url_for('static', filename='uploads/' + item['image']) }}"
              alt="Item Image" class="item-card-image"
              onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22200%22 height=%22180%22><rect width=%22100%25%22 height=%22100%25%22 fill=%22%23111827%22/><text x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23475569%22 font-size=%2248%22>📦</text></svg>'">
         <span class="item-card-badge badge-{{ item['type']|lower }}">{{ item['type'] }}</span>
