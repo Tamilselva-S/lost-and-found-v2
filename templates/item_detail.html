@@ -1,0 +1,423 @@
+{% extends "base.html" %}
+{% block title %}{{ item['item_name'] or 'Item Detail' }}{% endblock %}
+{% block content %}
+
+<div class="page-header">
+  <div>
+    <div class="breadcrumb"><a href="/">Home</a><span>/</span><a href="/view">Items</a><span>/</span>{{ item['item_name'] or 'Detail' }}</div>
+    <h1 class="page-title">
+      <i class="fas fa-{{ 'search-minus' if item['type']=='Lost' else 'search-plus' }}"
+         style="color:var(--{{ 'danger' if item['type']=='Lost' else 'success' }})"></i>
+      {{ item['item_name'] or item['description'][:40] or 'Item Detail' }}
+    </h1>
+  </div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    {% if item['status'] == 'Active' %}
+    <form action="/admin/items/{{ item['id'] }}/status" method="POST" style="display:inline">
+      <input type="hidden" name="status" value="Recovered">
+      <button type="submit" class="btn btn-success btn-sm"><i class="fas fa-check"></i> Mark Recovered</button>
+    </form>
+    {% endif %}
+    <form action="/delete/{{ item['id'] }}" method="POST" style="display:inline"
+          onsubmit="return confirm('Delete this item? This cannot be undone.')">
+      <button type="submit" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i> Delete</button>
+    </form>
+  </div>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 360px;gap:24px;align-items:start">
+
+  <!-- ── Left Column ────────────────────────────────────────── -->
+  <div style="display:flex;flex-direction:column;gap:20px">
+
+    <!-- Item Card -->
+    <div class="glass-card reveal">
+      <div class="card-body" style="padding:0">
+        <div style="display:grid;grid-template-columns:280px 1fr">
+          <!-- Image -->
+          <div style="position:relative;overflow:hidden;border-radius:var(--radius-lg) 0 0 var(--radius-lg);cursor:zoom-in" onclick="openLightbox(this.querySelector('img').src)">
+            <img src="{{ url_for('static', filename='uploads/' + item['image']) }}"
+                 alt="Item" style="width:100%;height:280px;object-fit:cover"
+                 onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22280%22 height=%22280%22><rect width=%22100%25%22 height=%22100%25%22 fill=%22%23111827%22/><text x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23475569%22 font-size=%2260%22>📦</text></svg>'">
+            <span class="item-card-badge badge-{{ item['type']|lower }}" style="top:14px;left:14px">{{ item['type'] }}</span>
+            {% if item['is_emergency'] %}
+            <div style="position:absolute;top:0;left:0;right:0;background:var(--danger);color:#fff;font-size:11px;font-weight:700;text-align:center;padding:4px;letter-spacing:1px">🚨 EMERGENCY</div>
+            {% endif %}
+          </div>
+          <!-- Details -->
+          <div style="padding:24px">
+            <div style="font-size:20px;font-weight:800;color:var(--text-primary);margin-bottom:16px">
+              {{ item['item_name'] or 'Item' }}
+            </div>
+            <div style="display:flex;flex-direction:column;gap:10px;font-size:13px">
+              <div style="display:flex;gap:10px">
+                <span class="tag {{ 'tag-danger' if item['type']=='Lost' else 'tag-success' }}">{{ item['type'] }}</span>
+                <span class="tag {{ 'tag-success' if item['status']=='Recovered' else 'tag-warning' if item['status']=='Claimed' else 'tag-info' }}">{{ item['status'] or 'Active' }}</span>
+                {% if item['category'] %}<span class="cat-pill">{{ item['category'] }}</span>{% endif %}
+              </div>
+              <div style="color:var(--text-secondary)"><i class="fas fa-align-left" style="color:var(--primary-light);width:16px"></i> {{ item['description'] }}</div>
+              <div style="color:var(--text-secondary)"><i class="fas fa-map-marker-alt" style="color:var(--danger);width:16px"></i> {{ item['location'] }}</div>
+              <div style="color:var(--text-secondary)"><i class="fas fa-user" style="color:var(--primary-light);width:16px"></i> Reported by: {{ item['name'] }}</div>
+              <div style="color:var(--text-secondary)">
+                <i class="fas fa-phone" style="color:var(--success);width:16px"></i> 
+                {% if session.get('is_admin') or session.get('show_contact_' ~ item['id']) %}
+                  {{ item['contact'] }}
+                {% else %}
+                  <a href="/contact/{{ item['id'] }}" class="btn btn-outline btn-sm" style="display:inline-flex;padding:2px 8px;font-size:11px;margin-left:4px;vertical-align:middle"><i class="fas fa-lock"></i> Reveal Contact Info</a>
+                {% endif %}
+              </div>
+              <div style="color:var(--text-secondary)"><i class="fas fa-calendar" style="color:var(--text-muted);width:16px"></i> {{ item['date'][:10] if item['date'] else 'Unknown' }}</div>
+              {% if item['item_condition'] and item['item_condition'] != 'Unknown' %}
+              <div style="color:var(--text-secondary)"><i class="fas fa-star-half-alt" style="color:var(--warning);width:16px"></i> Condition: {{ item['item_condition'] }}</div>
+              {% endif %}
+              <div style="color:var(--text-muted);font-size:12px"><i class="fas fa-eye" style="width:16px"></i> {{ item['view_count'] or 0 }} views</div>
+            </div>
+
+            <!-- Tags -->
+            {% if tags %}
+            <div style="margin-top:16px">
+              <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px">AUTO-TAGGED</div>
+              <div class="tags-list">
+                {% for tag in tags %}{% if tag.strip() %}<span class="tag tag-primary">{{ tag.strip() }}</span>{% endif %}{% endfor %}
+              </div>
+            </div>
+            {% endif %}
+
+            <!-- AI Summary -->
+            {% if item['description'] %}
+            <div style="margin-top:16px;padding:10px 14px;background:var(--primary-glow);border-radius:var(--radius);border:1px solid rgba(99,102,241,0.2)">
+              <div style="font-size:10px;color:var(--primary-light);font-weight:700;margin-bottom:4px"><i class="fas fa-robot"></i> AI SUMMARY</div>
+              <div id="itemAiSummary" style="font-size:12.5px;color:var(--text-secondary);font-style:italic">Generating…</div>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Timeline -->
+    <div class="glass-card reveal">
+      <div class="card-header">
+        <div class="card-title"><i class="fas fa-route"></i>Item Timeline</div>
+      </div>
+      <div class="card-body">
+        {% if timeline %}
+        <div class="timeline">
+          {% for event in timeline %}
+          <div class="timeline-item">
+            <div class="timeline-dot {{ 'success' if 'Recovered' in event['event'] or 'Collected' in event['event'] else 'done' }}"></div>
+            <div class="timeline-content">
+              <div class="timeline-event">{{ event['event'] }}</div>
+              {% if event['details'] %}<div class="timeline-details">{{ event['details'] }}</div>{% endif %}
+              <div class="timeline-time" data-time="{{ event['timestamp'] }}">{{ event['timestamp'] }}</div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div style="text-align:center;color:var(--text-muted);font-size:13px;padding:20px 0">
+          <i class="fas fa-history" style="font-size:24px;display:block;margin-bottom:8px;opacity:0.4"></i>
+          No timeline events yet.
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Claims -->
+    {% if claims %}
+    <div class="glass-card reveal">
+      <div class="card-header">
+        <div class="card-title"><i class="fas fa-file-alt"></i>Claim Requests</div>
+        <span class="tag tag-warning">{{ claims|length }} claim{{ 's' if claims|length != 1 }}</span>
+      </div>
+      <div class="card-body" style="padding:0">
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr><th>Claimant</th><th>Contact</th><th>Description</th><th>Status</th><th>Actions</th></tr>
+            </thead>
+            <tbody>
+              {% for claim in claims %}
+              <tr>
+                <td>{{ claim['claimant_name'] }}</td>
+                <td>{{ claim['claimant_contact'] }}</td>
+                <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ claim['claim_description'] }}</td>
+                <td><span class="tag {{ 'tag-warning' if claim['status']=='Pending' else 'tag-success' if claim['status']=='Approved' else 'tag-danger' }}">{{ claim['status'] }}</span></td>
+                <td>
+                  {% if claim['status'] == 'Pending' %}
+                  <form action="/claim/approve/{{ claim['id'] }}" method="POST" style="display:inline">
+                    <button type="submit" class="btn btn-success btn-sm" style="padding:4px 8px;font-size:11px">✓ Approve</button>
+                  </form>
+                  <form action="/claim/reject/{{ claim['id'] }}" method="POST" style="display:inline">
+                    <button type="submit" class="btn btn-danger btn-sm" style="padding:4px 8px;font-size:11px">✗ Reject</button>
+                  </form>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Feedback -->
+    {% if feedback_list %}
+    <div class="glass-card reveal">
+      <div class="card-header"><div class="card-title"><i class="fas fa-star"></i>Feedback &amp; Ratings</div></div>
+      <div class="card-body">
+        {% for fb in feedback_list %}
+        <div style="padding:10px 0;border-bottom:1px solid var(--border)">
+          <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+            <strong style="font-size:13px">{{ fb['name'] }}</strong>
+            <div style="color:var(--warning)">{{ '★' * fb['rating'] }}{{ '☆' * (5 - fb['rating']) }}</div>
+          </div>
+          <div style="font-size:12.5px;color:var(--text-secondary)">{{ fb['comment'] }}</div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- ── Right Column ───────────────────────────────────────── -->
+  <div style="display:flex;flex-direction:column;gap:16px">
+
+    <!-- QR Code Card -->
+    <div class="glass-card reveal" style="text-align: center; padding: 20px;">
+      <div style="font-size:12px;color:var(--text-muted);font-weight:700;margin-bottom:12px;"><i class="fas fa-qrcode"></i> SHAREABLE QR CODE</div>
+      <div style="display:flex;justify-content:center;margin-bottom:10px;">
+        <img src="/qrcode/{{ item['id'] }}" alt="Item QR Code" style="width: 140px; height: 140px; border-radius: var(--radius); border: 2px solid rgba(255,255,255,0.08); background: white; padding: 6px;">
+      </div>
+      <div style="font-size:11px;color:var(--text-muted)">Scan to view this item on mobile</div>
+    </div>
+
+    <!-- Submit Claim -->
+    {% if item['status'] == 'Active' or item['status'] == 'Claimed' %}
+    <div class="glass-card reveal">
+      <div class="card-header"><div class="card-title"><i class="fas fa-hand-paper"></i>Submit a Claim</div></div>
+      <div class="card-body">
+        <form action="/claim/{{ item['id'] }}" method="POST">
+          <div class="form-group">
+            <label class="form-label">Your Name</label>
+            <input type="text" class="form-control" name="claimant_name" placeholder="Full name" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Contact Info</label>
+            <input type="text" class="form-control" name="claimant_contact" placeholder="Phone / Email" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Proof of Ownership</label>
+            <textarea class="form-control" name="claim_description" rows="3"
+                      placeholder="Describe how you can prove this is yours (serial number, unique marks, etc.)" required></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary w-100"><i class="fas fa-paper-plane"></i> Submit Claim</button>
+        </form>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Storage Info -->
+    {% if storage_info %}
+    <div class="glass-card reveal">
+      <div class="card-header"><div class="card-title"><i class="fas fa-warehouse"></i>Storage Location</div></div>
+      <div class="card-body">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:13px">
+          <div><div style="color:var(--text-muted);font-size:10px;font-weight:700">RACK</div><div style="font-size:20px;font-weight:800;color:var(--primary-light)">{{ storage_info['rack_number'] }}</div></div>
+          <div><div style="color:var(--text-muted);font-size:10px;font-weight:700">SHELF</div><div style="font-size:20px;font-weight:800;color:var(--primary-light)">{{ storage_info['shelf_number'] }}</div></div>
+        </div>
+        <div style="margin-top:10px;font-size:12px;color:var(--text-muted)">
+          <i class="fas fa-calendar-alt"></i> Assigned: {{ storage_info['assigned_date'] }}<br>
+          <i class="fas fa-hourglass-end"></i> Expires: {{ storage_info['expiry_date'] }}
+        </div>
+        {% if not storage_info['collected'] %}
+        <form action="/admin/storage/collect/{{ storage_info['id'] }}" method="POST" style="margin-top:12px">
+          <button type="submit" class="btn btn-success btn-sm w-100"><i class="fas fa-check"></i> Mark Collected</button>
+        </form>
+        {% else %}
+        <div class="tag tag-success" style="margin-top:10px;width:100%;justify-content:center">✓ Collected</div>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Book Appointment -->
+    {% if item['status'] in ['Active','Claimed'] %}
+    <div class="glass-card reveal">
+      <div class="card-header"><div class="card-title"><i class="fas fa-calendar-check"></i>Book Collection Slot</div></div>
+      <div class="card-body">
+        <form action="/appointments" method="POST">
+          <input type="hidden" name="item_id" value="{{ item['id'] }}">
+          <div class="form-group">
+            <label class="form-label">Your Name</label>
+            <input type="text" class="form-control" name="name" placeholder="Full name" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Contact</label>
+            <input type="text" class="form-control" name="contact" placeholder="Phone / Email" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Date</label>
+            <input type="date" class="form-control" name="appointment_date" required
+                   min="{{ now[:10] if now else '' }}">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Time Slot</label>
+            <select class="form-control" name="time_slot">
+              <option>9:00 AM – 10:00 AM</option>
+              <option>10:00 AM – 11:00 AM</option>
+              <option>11:00 AM – 12:00 PM</option>
+              <option>2:00 PM – 3:00 PM</option>
+              <option>3:00 PM – 4:00 PM</option>
+              <option>4:00 PM – 5:00 PM</option>
+            </select>
+          </div>
+          <button type="submit" class="btn btn-primary w-100"><i class="fas fa-calendar-plus"></i> Book Slot</button>
+        </form>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Feedback Form -->
+    <div class="glass-card reveal">
+      <div class="card-header"><div class="card-title"><i class="fas fa-comment-alt"></i>Leave Feedback</div></div>
+      <div class="card-body">
+        <form action="/feedback/{{ item['id'] }}" method="POST">
+          <div class="form-group">
+            <label class="form-label">Your Name</label>
+            <input type="text" class="form-control" name="name" placeholder="Name" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Rating</label>
+            <select class="form-control" name="rating">
+              <option value="5">★★★★★ Excellent</option>
+              <option value="4">★★★★☆ Good</option>
+              <option value="3">★★★☆☆ Average</option>
+              <option value="2">★★☆☆☆ Poor</option>
+              <option value="1">★☆☆☆☆ Terrible</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Comment</label>
+            <textarea class="form-control" name="comment" rows="2" placeholder="Your experience…"></textarea>
+          </div>
+          <button type="submit" class="btn btn-outline btn-sm w-100"><i class="fas fa-star"></i> Submit Feedback</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Nearby Items -->
+    {% if nearby %}
+    <div class="glass-card reveal">
+      <div class="card-header"><div class="card-title"><i class="fas fa-map-pin"></i>Similar Nearby Items</div></div>
+      <div class="card-body" style="padding:0">
+        {% for n in nearby %}
+        <a href="/item/{{ n['id'] }}" style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--border);text-decoration:none;transition:var(--transition-fast)" onmouseover="this.style.background='var(--bg-hover)'" onmouseout="this.style.background=''">
+          <img src="{{ url_for('static', filename='uploads/' + n['image']) }}" alt="" style="width:44px;height:44px;object-fit:cover;border-radius:var(--radius-sm)"
+               onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2244%22 height=%2244%22><rect width=%22100%25%22 height=%22100%25%22 fill=%22%23111827%22/></svg>'">
+          <div style="flex:1;min-width:0">
+            <div style="font-size:12.5px;font-weight:600;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ n['item_name'] or n['description'][:25] or 'Item' }}</div>
+            <div style="font-size:11px;color:var(--text-muted)">{{ n['location'] }}</div>
+          </div>
+          <span class="tag {{ 'tag-danger' if n['type']=='Lost' else 'tag-success' }}" style="font-size:10px">{{ n['type'] }}</span>
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Lightbox Modal -->
+<div id="imageLightbox" class="lightbox-modal" onclick="closeLightbox()">
+  <span class="lightbox-close">&times;</span>
+  <img class="lightbox-content" id="lightboxImg">
+</div>
+
+<style>
+/* Lightbox modal background */
+.lightbox-modal {
+  display: none;
+  position: fixed;
+  z-index: 9999;
+  padding-top: 100px;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0,0,0,0.95);
+  backdrop-filter: blur(10px);
+}
+
+/* Modal Content (Image) */
+.lightbox-content {
+  margin: auto;
+  display: block;
+  max-width: 90%;
+  max-height: 75vh;
+  border-radius: var(--radius-lg);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  border: 1px solid rgba(255,255,255,0.1);
+  object-fit: contain;
+  animation: zoom 0.25s ease-out;
+}
+
+@keyframes zoom {
+  from {transform:scale(0.9); opacity: 0;}
+  to {transform:scale(1); opacity: 1;}
+}
+
+/* The Close Button */
+.lightbox-close {
+  position: absolute;
+  top: 25px;
+  right: 35px;
+  color: #fff;
+  font-size: 40px;
+  font-weight: bold;
+  transition: 0.2s;
+  cursor: pointer;
+  opacity: 0.7;
+}
+
+.lightbox-close:hover {
+  opacity: 1;
+  color: var(--primary-light);
+}
+</style>
+
+{% endblock %}
+{% block scripts %}
+<script>
+function openLightbox(src) {
+  const modal = document.getElementById("imageLightbox");
+  const img = document.getElementById("lightboxImg");
+  if (modal && img) {
+    modal.style.display = "block";
+    img.src = src;
+  }
+}
+function closeLightbox() {
+  const modal = document.getElementById("imageLightbox");
+  if (modal) modal.style.display = "none";
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  // Generate AI summary
+  const summaryEl = document.getElementById('itemAiSummary');
+  if (summaryEl) {
+    const desc = "{{ item['description']|replace('\"', '\\\"') }}";
+    const cat  = "{{ item['category'] or 'Other' }}";
+    const loc  = "{{ item['location']|replace('\"', '\\\"') }}";
+    const name = "{{ item['item_name']|replace('\"', '\\\"') }}";
+    const type = "{{ item['type'] }}";
+    if (desc) summaryEl.textContent = generateSummary(name, desc, cat, loc, type);
+  }
+  // Set today as min date for appointments
+  const dateInput = document.querySelector('input[name="appointment_date"]');
+  if (dateInput) dateInput.min = new Date().toISOString().split('T')[0];
+});
+</script>
+{% endblock %}

@@ -1,0 +1,257 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+
+<div class="page-header reveal">
+  <div>
+    <div class="breadcrumb"><a href="/">Home</a><span>/</span>Dashboard</div>
+    <h1 class="page-title"><i class="fas fa-chart-line"></i>Admin Dashboard</h1>
+    <div class="page-subtitle">Real-time overview of Lost &amp; Found activity</div>
+  </div>
+  <div style="display:flex;gap:8px">
+    <a href="/admin/analytics" class="btn btn-outline btn-sm"><i class="fas fa-chart-bar"></i> Analytics</a>
+    <a href="/admin/storage"   class="btn btn-outline btn-sm"><i class="fas fa-warehouse"></i> Storage</a>
+    <a href="/admin/audit"     class="btn btn-outline btn-sm"><i class="fas fa-history"></i> Audit</a>
+  </div>
+</div>
+
+<!-- ── Stats Row ──────────────────────────────────────────────── -->
+<div class="stats-grid stagger reveal">
+  <div class="stat-widget" style="--stat-color:var(--danger);--stat-color-bg:var(--danger-bg)">
+    <div class="stat-icon"><i class="fas fa-search-minus"></i></div>
+    <div class="stat-value" data-stat="lost" data-count="{{ stats.lost }}">{{ stats.lost }}</div>
+    <div class="stat-label">Lost Reports</div>
+  </div>
+  <div class="stat-widget" style="--stat-color:var(--success);--stat-color-bg:var(--success-bg)">
+    <div class="stat-icon"><i class="fas fa-search-plus"></i></div>
+    <div class="stat-value" data-stat="found" data-count="{{ stats.found }}">{{ stats.found }}</div>
+    <div class="stat-label">Found Reports</div>
+  </div>
+  <div class="stat-widget" style="--stat-color:var(--primary-light);--stat-color-bg:var(--primary-glow)">
+    <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+    <div class="stat-value" data-stat="recovered" data-count="{{ stats.recovered }}">{{ stats.recovered }}</div>
+    <div class="stat-label">Recovered</div>
+  </div>
+  <div class="stat-widget" style="--stat-color:var(--warning);--stat-color-bg:var(--warning-bg)">
+    <div class="stat-icon"><i class="fas fa-file-alt"></i></div>
+    <div class="stat-value" data-stat="claims" data-count="{{ stats.claims }}">{{ stats.claims }}</div>
+    <div class="stat-label">Pending Claims</div>
+  </div>
+  <div class="stat-widget" style="--stat-color:var(--danger);--stat-color-bg:var(--danger-bg)">
+    <div class="stat-icon"><i class="fas fa-exclamation-triangle"></i></div>
+    <div class="stat-value" data-stat="emergency" data-count="{{ stats.emergency }}">{{ stats.emergency }}</div>
+    <div class="stat-label">Emergency Alerts</div>
+  </div>
+  <div class="stat-widget" style="--stat-color:var(--accent);--stat-color-bg:rgba(6,182,212,0.1)">
+    <div class="stat-icon"><i class="fas fa-warehouse"></i></div>
+    <div class="stat-value" data-stat="storage" data-count="{{ stats.storage }}">{{ stats.storage }}</div>
+    <div class="stat-label">In Storage</div>
+  </div>
+  <div class="stat-widget" style="--stat-color:var(--info);--stat-color-bg:var(--info-bg)">
+    <div class="stat-icon"><i class="fas fa-hands-helping"></i></div>
+    <div class="stat-value" data-stat="volunteers" data-count="{{ stats.volunteers }}">{{ stats.volunteers }}</div>
+    <div class="stat-label">Volunteers</div>
+  </div>
+  <div class="stat-widget" style="--stat-color:var(--secondary);--stat-color-bg:rgba(139,92,246,0.1)">
+    <div class="stat-icon"><i class="fas fa-percentage"></i></div>
+    <div class="stat-value">{% if stats.total > 0 %}{{ ((stats.recovered/stats.total)*100)|int }}%{% else %}0%{% endif %}</div>
+    <div class="stat-label">Recovery Rate</div>
+  </div>
+</div>
+
+<!-- ── Widget Grid (Draggable) ────────────────────────────────── -->
+<div id="widgetGrid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:20px">
+
+  <!-- Trend Chart -->
+  <div class="glass-card reveal" data-widget="trend" style="grid-column:1/-1">
+    <div class="card-header">
+      <div class="card-title"><i class="fas fa-chart-line"></i>Monthly Trend (Last 6 Months)</div>
+      <button class="widget-collapse-btn btn btn-ghost btn-sm btn-icon"><i class="fas fa-chevron-up"></i></button>
+    </div>
+    <div class="card-body"><div class="chart-wrap chart-wrap-lg"><canvas id="trendChart"></canvas></div></div>
+  </div>
+
+  <!-- Category Doughnut -->
+  <div class="glass-card reveal" data-widget="category">
+    <div class="card-header">
+      <div class="card-title"><i class="fas fa-chart-pie"></i>By Category</div>
+      <button class="widget-collapse-btn btn btn-ghost btn-sm btn-icon"><i class="fas fa-chevron-up"></i></button>
+    </div>
+    <div class="card-body"><div class="chart-wrap"><canvas id="categoryChart"></canvas></div></div>
+  </div>
+
+  <!-- Top Recovered Categories -->
+  <div class="glass-card reveal" data-widget="topcats">
+    <div class="card-header">
+      <div class="card-title"><i class="fas fa-trophy"></i>Top Recovered Categories</div>
+      <button class="widget-collapse-btn btn btn-ghost btn-sm btn-icon"><i class="fas fa-chevron-up"></i></button>
+    </div>
+    <div class="card-body">
+      {% if top_cats %}
+      <div class="chart-wrap chart-wrap-sm"><canvas id="topCatsChart"></canvas></div>
+      {% else %}
+      <div class="empty-state" style="padding:24px"><div class="empty-icon"><i class="fas fa-trophy"></i></div><div class="empty-sub">No recovered items yet</div></div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Pending Claims -->
+  <div class="glass-card reveal" data-widget="claims" style="grid-column:1/-1">
+    <div class="card-header">
+      <div class="card-title"><i class="fas fa-file-alt"></i>Pending Claims</div>
+      <span class="tag tag-warning">{{ pending_claims|length }}</span>
+      <button class="widget-collapse-btn btn btn-ghost btn-sm btn-icon"><i class="fas fa-chevron-up"></i></button>
+    </div>
+    <div class="card-body" style="padding:0">
+      {% if pending_claims %}
+      <div class="table-container">
+        <table class="data-table">
+          <thead><tr><th>Item</th><th>Claimant</th><th>Contact</th><th>Description</th><th>Date</th><th>Actions</th></tr></thead>
+          <tbody>
+            {% for claim in pending_claims %}
+            <tr>
+              <td><a href="/item/{{ claim['item_id'] }}" class="text-primary-c">{{ claim['description'][:30] }}</a><br><span class="tag {{ 'tag-danger' if claim['type']=='Lost' else 'tag-success' }}" style="font-size:10px">{{ claim['type'] }}</span></td>
+              <td>{{ claim['claimant_name'] }}</td>
+              <td>{{ claim['claimant_contact'] }}</td>
+              <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ claim['claim_description'] }}</td>
+              <td style="white-space:nowrap;color:var(--text-muted);font-size:11px" data-time="{{ claim['submitted_at'] }}">{{ claim['submitted_at'][:10] if claim['submitted_at'] else '' }}</td>
+              <td style="white-space:nowrap">
+                <form action="/claim/approve/{{ claim['id'] }}" method="POST" style="display:inline">
+                  <button class="btn btn-success btn-sm" style="padding:3px 8px;font-size:11px">✓ Approve</button>
+                </form>
+                <form action="/claim/reject/{{ claim['id'] }}" method="POST" style="display:inline">
+                  <button class="btn btn-danger btn-sm" style="padding:3px 8px;font-size:11px">✗ Reject</button>
+                </form>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="empty-state" style="padding:32px"><div class="empty-icon"><i class="fas fa-check"></i></div><div class="empty-title">All Clear!</div><div class="empty-sub">No pending claims at this time.</div></div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Storage Expiry Alerts -->
+  <div class="glass-card reveal" data-widget="expiry">
+    <div class="card-header">
+      <div class="card-title"><i class="fas fa-hourglass-half"></i>Expiry Alerts</div>
+      <a href="/admin/storage" class="btn btn-ghost btn-sm">View All</a>
+    </div>
+    <div class="card-body">
+      {% if expiry_30 %}
+        {% for s in expiry_30 %}
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:12.5px">
+          <div>
+            <div style="font-weight:600;color:var(--text-primary)">{{ s['description'][:30] }}</div>
+            <div style="color:var(--text-muted)">Rack {{ s['rack_number'] }} / Shelf {{ s['shelf_number'] }}</div>
+          </div>
+          <span class="expiry-badge expiry-warn">Expires {{ s['expiry_date'] }}</span>
+        </div>
+        {% endfor %}
+      {% else %}
+        <div class="empty-state" style="padding:24px"><div class="empty-icon"><i class="fas fa-warehouse"></i></div><div class="empty-sub">No items expiring soon</div></div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Staff Notification Emails -->
+  <div class="glass-card reveal" data-widget="staff_emails">
+    <div class="card-header">
+      <div class="card-title"><i class="fas fa-envelope"></i>Staff Notification Emails</div>
+      <button class="widget-collapse-btn btn btn-ghost btn-sm btn-icon"><i class="fas fa-chevron-up"></i></button>
+    </div>
+    <div class="card-body">
+      <div style="max-height:180px;overflow-y:auto;margin-bottom:12px">
+        {% if staff_emails %}
+          {% for se in staff_emails %}
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px">
+            <span style="color:var(--text-primary);word-break:break-all">{{ se['email'] }}</span>
+            <form action="/admin/staff-emails/delete/{{ se['id'] }}" method="POST" style="display:inline;margin-left:8px" onsubmit="return confirm('Remove {{ se['email'] }}?')">
+              <button class="btn btn-ghost btn-sm btn-icon" style="color:var(--danger)"><i class="fas fa-trash"></i></button>
+            </form>
+          </div>
+          {% endfor %}
+        {% else %}
+          <div class="empty-state" style="padding:16px"><div class="empty-sub">No staff emails registered</div></div>
+        {% endif %}
+      </div>
+      
+      <form action="/admin/staff-emails/add" method="POST" style="display:flex;gap:8px">
+        <input type="email" name="email" class="form-control form-control-sm" placeholder="New staff email" required style="flex:1;background:var(--bg-input)">
+        <button class="btn btn-primary btn-sm" style="padding:0 12px"><i class="fas fa-plus"></i> Add</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Live Activity Feed -->
+  <div class="glass-card reveal" data-widget="feed">
+    <div class="card-header">
+      <div class="card-title"><i class="fas fa-rss"></i>Live Activity</div>
+      <span class="tag tag-success" style="font-size:10px"><i class="fas fa-circle" style="font-size:7px"></i> Live</span>
+    </div>
+    <div class="card-body" style="padding:0 20px;max-height:300px;overflow-y:auto">
+      <div class="feed-list" id="liveFeed">
+        {% for f in feed %}
+        <div class="feed-item">
+          <div class="feed-dot"></div>
+          <div class="feed-content">
+            <div class="feed-action">{{ f['action'] }}</div>
+            <div class="feed-details">{{ f['details'] }}</div>
+          </div>
+          <div class="feed-time" data-time="{{ f['timestamp'] }}">{{ f['timestamp'][:10] if f['timestamp'] else '' }}</div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Items -->
+  <div class="glass-card reveal" data-widget="recent" style="grid-column:1/-1">
+    <div class="card-header">
+      <div class="card-title"><i class="fas fa-clock"></i>Recent Reports</div>
+      <a href="/view" class="btn btn-ghost btn-sm">View All</a>
+    </div>
+    <div class="card-body" style="padding:0">
+      <div class="table-container">
+        <table class="data-table">
+          <thead><tr><th>Type</th><th>Item</th><th>Location</th><th>Reporter</th><th>Status</th><th>Date</th><th>Action</th></tr></thead>
+          <tbody>
+            {% for item in recent_items %}
+            <tr>
+              <td><span class="tag {{ 'tag-danger' if item['type']=='Lost' else 'tag-success' }}" style="font-size:10px">{{ item['type'] }}</span></td>
+              <td><a href="/item/{{ item['id'] }}" class="text-primary-c">{{ item['item_name'] or item['description'][:25] }}</a></td>
+              <td style="color:var(--text-muted)">{{ item['location'] }}</td>
+              <td style="color:var(--text-muted)">{{ item['name'] }}</td>
+              <td><span class="tag {{ 'tag-success' if item['status']=='Recovered' else 'tag-warning' if item['status']=='Claimed' else 'tag-info' }}" style="font-size:10px">{{ item['status'] or 'Active' }}</span></td>
+              <td style="color:var(--text-muted);font-size:11px" data-time="{{ item['date'] }}">{{ item['date'][:10] if item['date'] else '' }}</td>
+              <td>
+                <form action="/delete/{{ item['id'] }}" method="POST" onsubmit="return confirm('Delete?')">
+                  <button class="btn btn-danger btn-sm" style="padding:3px 8px;font-size:11px"><i class="fas fa-trash"></i></button>
+                </form>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+{% block scripts %}
+<script>
+const monthsData = {{ months_data | tojson }};
+const catData    = {{ cat_data | tojson }};
+const topCats    = {{ top_cats | tojson }};
+
+document.addEventListener('DOMContentLoaded', () => {
+  initTrendChart(monthsData);
+  initCategoryChart(catData);
+  initTopCatsChart(topCats);
+});
+</script>
+{% endblock %}

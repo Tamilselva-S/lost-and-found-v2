@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block title %}Success Stories{% endblock %}
+{% block content %}
+
+<div class="page-header reveal">
+  <div>
+    <div class="breadcrumb"><a href="/">Home</a><span>/</span>Success Stories</div>
+    <h1 class="page-title"><i class="fas fa-trophy"></i>Recovery Success Stories</h1>
+    <div class="page-subtitle">Real stories of items reunited with their owners — our greatest achievements</div>
+  </div>
+</div>
+
+<!-- ── Achievement Stats ──────────────────────────────────────── -->
+<div class="stats-grid stagger reveal" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr));margin-bottom:32px">
+  <div class="stat-widget" style="--stat-color:var(--success);--stat-color-bg:var(--success-bg)">
+    <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+    <div class="stat-value" data-count="{{ stats.recovered }}">{{ stats.recovered }}</div>
+    <div class="stat-label">Items Recovered</div>
+  </div>
+  <div class="stat-widget" style="--stat-color:var(--warning);--stat-color-bg:var(--warning-bg)">
+    <div class="stat-icon"><i class="fas fa-book-open"></i></div>
+    <div class="stat-value" data-count="{{ stories|length }}">{{ stories|length }}</div>
+    <div class="stat-label">Stories Shared</div>
+  </div>
+  <div class="stat-widget" style="--stat-color:var(--primary-light);--stat-color-bg:var(--primary-glow)">
+    <div class="stat-icon"><i class="fas fa-percentage"></i></div>
+    <div class="stat-value">{% if stats.total > 0 %}{{ ((stats.recovered/stats.total)*100)|int }}%{% else %}0%{% endif %}</div>
+    <div class="stat-label">Recovery Rate</div>
+  </div>
+  <div class="stat-widget" style="--stat-color:var(--accent);--stat-color-bg:rgba(6,182,212,0.1)">
+    <div class="stat-icon"><i class="fas fa-heart"></i></div>
+    <div class="stat-value">{{ stats.volunteers }}</div>
+    <div class="stat-label">Community Helpers</div>
+  </div>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 360px;gap:24px;align-items:start">
+
+  <!-- Stories Grid -->
+  <div>
+    {% if stories %}
+    <div style="display:flex;flex-direction:column;gap:18px" class="stagger">
+      {% for story in stories %}
+      <div class="story-card reveal">
+        <div class="story-meta">
+          <span class="story-days"><i class="fas fa-clock"></i> Recovered in {{ story['recovery_days'] }} day{{ 's' if story['recovery_days'] != 1 }}</span>
+          {% if story['category'] %}<span class="cat-pill">{{ story['category'] }}</span>{% endif %}
+          {% if story['type'] %}<span class="tag {{ 'tag-danger' if story['type']=='Lost' else 'tag-success' }}" style="font-size:11px">{{ story['type'] }}</span>{% endif %}
+        </div>
+        <div style="font-size:17px;font-weight:800;color:var(--text-primary);margin:8px 0">{{ story['title'] }}</div>
+        {% if story['location'] %}
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px"><i class="fas fa-map-marker-alt"></i> {{ story['location'] }}</div>
+        {% endif %}
+        <div class="story-text">{{ story['story'] }}</div>
+        <div class="story-author">— {{ story['submitted_by'] }}, {{ story['submitted_at'][:10] if story['submitted_at'] else '' }}</div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state glass-card reveal" style="padding:64px">
+      <div class="empty-icon"><i class="fas fa-trophy"></i></div>
+      <div class="empty-title">No Stories Yet</div>
+      <div class="empty-sub">Be the first to share your recovery experience and inspire others!</div>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Submit Story Form -->
+  <div class="glass-card reveal">
+    <div class="card-header"><div class="card-title"><i class="fas fa-pen"></i>Share Your Story</div></div>
+    <div class="card-body">
+      <form action="/success-stories/add" method="POST">
+        <div class="form-group">
+          <label class="form-label"><i class="fas fa-link"></i>Item ID (Optional)</label>
+          <input type="number" class="form-control" name="item_id" placeholder="Item ID from the system">
+        </div>
+        <div class="form-group">
+          <label class="form-label"><i class="fas fa-heading"></i>Story Title</label>
+          <input type="text" class="form-control" name="title" placeholder="e.g., Found my wallet after 3 days!" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label"><i class="fas fa-align-left"></i>Your Story</label>
+          <textarea class="form-control" name="story" rows="5"
+                    placeholder="Tell us about your experience recovering your item…" required></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label"><i class="fas fa-clock"></i>Recovery Time (Days)</label>
+          <input type="number" class="form-control" name="recovery_days" min="0" placeholder="How many days did it take?" value="1">
+        </div>
+        <div class="form-group">
+          <label class="form-label"><i class="fas fa-user"></i>Your Name</label>
+          <input type="text" class="form-control" name="submitted_by" placeholder="Your name" required>
+        </div>
+        <button type="submit" class="btn btn-primary w-100"><i class="fas fa-paper-plane"></i> Share Story</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

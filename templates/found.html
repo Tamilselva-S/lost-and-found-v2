@@ -1,0 +1,494 @@
+{% extends "base.html" %}
+{% block title %}Report Found Item{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+{% endblock %}
+{% block content %}
+
+<div class="page-header">
+  <div>
+    <div class="breadcrumb"><a href="/">Home</a><span>/</span>Report Found</div>
+    <h1 class="page-title"><i class="fas fa-search-plus" style="color:var(--success)"></i>Report Found Item</h1>
+    <div class="page-subtitle">You found something? Help reunite it with its owner. Fill in the details below.</div>
+  </div>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 340px;gap:24px;align-items:start">
+
+  <!-- ── Main Form ──────────────────────────────────────────── -->
+  <div class="form-section reveal">
+    <form id="foundForm" method="POST" enctype="multipart/form-data" onsubmit="return onFormSubmit(event, this, 'Found')">
+      <input type="hidden" name="tags" id="tagsHidden">
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label"><i class="fas fa-user"></i>Your Name</label>
+          <input type="text" class="form-control" name="name" placeholder="Full name" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label"><i class="fas fa-phone"></i>Contact Info</label>
+          <input type="text" class="form-control" name="contact" placeholder="Phone / Email" required>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label"><i class="fas fa-box"></i>Item Name</label>
+        <input type="text" class="form-control" name="item_name" id="itemName"
+               placeholder="e.g., Blue Umbrella" required oninput="onDescInput()">
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label"><i class="fas fa-tag"></i>Category</label>
+          <select class="form-control" name="category" id="categorySelect">
+            <option value="Other">Select category…</option>
+            <option>Electronics</option>
+            <option>Wallet</option>
+            <option>ID Cards</option>
+            <option>Keys</option>
+            <option>Books</option>
+            <option>Clothing</option>
+            <option>Jewellery</option>
+            <option>Documents</option>
+            <option>Glasses</option>
+            <option>Umbrella</option>
+            <option>Food</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label"><i class="fas fa-map-marker-alt"></i>Location Found</label>
+          <input type="text" class="form-control" name="location" id="locationInput"
+                 placeholder="e.g., Canteen, Block C" required>
+        </div>
+      </div>
+
+      <!-- Map Selection Widget -->
+      <div class="form-group">
+        <label class="form-label"><i class="fas fa-map"></i>Pinpoint Location on Map</label>
+        <div id="mapContainer">
+          <div id="map"></div>
+        </div>
+        <span class="form-hint"><i class="fas fa-info-circle"></i> Drag the marker or click on the map to automatically fill in the location field.</span>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label"><i class="fas fa-align-left"></i>Item Description</label>
+        <textarea class="form-control" name="description" id="itemDesc" rows="4"
+                  placeholder="Describe the item — color, brand, any distinguishing features…"
+                  required oninput="onDescInput()"></textarea>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label"><i class="fas fa-star-half-alt"></i>Item Condition</label>
+        <select class="form-control" name="item_condition">
+          <option value="Unknown">Not sure</option>
+          <option value="New">New / Excellent</option>
+          <option value="Good">Good</option>
+          <option value="Damaged">Slightly Damaged</option>
+          <option value="Broken">Broken</option>
+        </select>
+      </div>
+
+      {% if events %}
+      <div class="form-group">
+        <label class="form-label"><i class="fas fa-calendar-alt"></i>Associate with Event (Optional)</label>
+        <select class="form-control" name="event_id">
+          <option value="">No event</option>
+          {% for ev in events %}
+          <option value="{{ ev['id'] }}">{{ ev['name'] }} ({{ ev['event_type'] }})</option>
+          {% endfor %}
+        </select>
+      </div>
+      {% endif %}
+
+      <!-- Image Upload & Camera Capture side-by-side tabs -->
+      <div class="form-group">
+        <label class="form-label"><i class="fas fa-image"></i>Item Photo</label>
+        
+        <div class="image-tabs">
+          <button type="button" class="image-tab-btn active" id="btnUploadTab" onclick="switchImageTab('upload')">
+            <i class="fas fa-file-upload"></i> Upload File
+          </button>
+          <button type="button" class="image-tab-btn" id="btnCameraTab" onclick="switchImageTab('camera')">
+            <i class="fas fa-camera"></i> Take Snapshot
+          </button>
+        </div>
+
+        <!-- Tab 1: Upload File -->
+        <div id="uploadTabContainer" class="img-preview-box" onclick="document.getElementById('imageInput').click()" style="cursor: pointer;">
+          <img id="preview" src="" alt="" style="display:none; max-width: 100%; border-radius: var(--radius);">
+          <i class="fas fa-cloud-upload-alt" style="font-size:32px;color:var(--text-muted); display: block; margin: 0 auto 8px;"></i>
+          <span style="color:var(--text-muted);font-size:13px">Click to select an image from files</span>
+        </div>
+        <input type="file" id="imageInput" name="image" accept="image/*" style="display:none" onchange="previewImageFile(event)">
+
+        <!-- Tab 2: Camera Capture -->
+        <div id="cameraTabContainer" class="webcam-card" style="display: none;">
+          <div id="cameraStreamContainer" class="webcam-video-container" style="display: none;">
+            <video id="webcamVideo" autoplay playsinline></video>
+          </div>
+          
+          <div id="cameraPreviewContainer" class="webcam-preview-container" style="display: none;">
+            <img id="cameraPreviewImg" src="" alt="Captured Image">
+          </div>
+          
+          <div class="webcam-actions">
+            <button type="button" class="btn btn-sm btn-outline" id="btnStartCamera" onclick="startWebcam()">
+              <i class="fas fa-video"></i> Start Camera
+            </button>
+            <button type="button" class="btn btn-sm btn-primary" id="btnCapturePhoto" onclick="captureSnapshot()" style="display: none;">
+              <i class="fas fa-camera"></i> Capture Photo
+            </button>
+            <button type="button" class="btn btn-sm btn-warning" id="btnRetakePhoto" onclick="retakePhoto()" style="display: none;">
+              <i class="fas fa-redo"></i> Retake
+            </button>
+            <button type="button" class="btn btn-sm btn-danger" id="btnStopCamera" onclick="stopWebcam()" style="display: none;">
+              <i class="fas fa-video-slash"></i> Stop Camera
+            </button>
+          </div>
+        </div>
+
+        <input type="hidden" name="camera_image" id="camera_image">
+      </div>
+
+      <div id="tagPreview" style="display:none;margin-bottom:16px"></div>
+
+      <div id="aiSummaryBox" style="display:none;margin-bottom:16px">
+        <div class="glass-card" style="padding:12px 16px">
+          <div class="fs-12 text-muted-c" style="margin-bottom:4px"><i class="fas fa-robot" style="color:var(--primary-light)"></i> AI-Generated Summary</div>
+          <div id="aiSummaryText" style="font-size:13px;color:var(--text-secondary);font-style:italic"></div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:12px;flex-wrap:wrap">
+        <button type="submit" class="btn btn-success btn-lg" id="submitBtn">
+          <i class="fas fa-paper-plane"></i> Submit Found Report
+        </button>
+        <a href="/" class="btn btn-outline btn-lg"><i class="fas fa-times"></i> Cancel</a>
+      </div>
+    </form>
+  </div>
+
+  <!-- ── Sidebar Panel ──────────────────────────────────────── -->
+  <div style="display:flex;flex-direction:column;gap:16px">
+
+    <!-- Nearby Lost Items (loaded via JS) -->
+    <div class="glass-card reveal">
+      <div class="card-header">
+        <div class="card-title"><i class="fas fa-map-pin"></i>Potential Matches</div>
+      </div>
+      <div class="card-body" id="nearbyPanel">
+        <div style="text-align:center;color:var(--text-muted);font-size:12.5px">
+          <i class="fas fa-search" style="font-size:24px;margin-bottom:8px;display:block;opacity:0.4"></i>
+          Fill in the category &amp; location to see similar lost items.
+        </div>
+      </div>
+    </div>
+
+    <!-- Condition guide -->
+    <div class="glass-card reveal">
+      <div class="card-header"><div class="card-title"><i class="fas fa-info-circle"></i>Condition Guide</div></div>
+      <div class="card-body">
+        <div style="display:flex;flex-direction:column;gap:6px;font-size:12.5px">
+          <div style="display:flex;align-items:center;gap:8px"><span class="tag tag-success">New</span> Unused / perfect condition</div>
+          <div style="display:flex;align-items:center;gap:8px"><span class="tag tag-info">Good</span> Used but intact</div>
+          <div style="display:flex;align-items:center;gap:8px"><span class="tag tag-warning">Damaged</span> Minor damage, still usable</div>
+          <div style="display:flex;align-items:center;gap:8px"><span class="tag tag-danger">Broken</span> Severely damaged</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="glass-card reveal">
+      <div class="card-header"><div class="card-title"><i class="fas fa-heart"></i>Thank You!</div></div>
+      <div class="card-body" style="font-size:13px;color:var(--text-secondary);line-height:1.7">
+        Reporting a found item helps reunite people with their belongings.
+        You earn <strong style="color:var(--warning)">Community Points</strong> and badges for every report!
+        <div style="margin-top:12px">
+          <a href="/success-stories" class="btn btn-ghost btn-sm w-100">View Success Stories</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Duplicate Modal -->
+<div class="modal-overlay" id="duplicateModal">
+  <div class="modal-box">
+    <div class="modal-icon">⚠️</div>
+    <div class="modal-title">Possible Duplicate Report</div>
+    <div class="modal-msg">Similar items are already in the system. Could this be a match?</div>
+    <div id="dupeList" style="margin-bottom:16px;max-height:200px;overflow-y:auto"></div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" id="dupeCancel">Review Matches</button>
+      <button class="btn btn-success" id="dupeConfirm">Submit Anyway</button>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+{% block scripts %}
+<script>
+let formSubmitPending = false;
+
+async function onFormSubmit(e, form, type) {
+  if (formSubmitPending) return true;
+  e.preventDefault();
+  const btn = document.getElementById('submitBtn');
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking…';
+  btn.disabled = true;
+  const allowed = await handleFormAI(form, type);
+  if (allowed) { formSubmitPending = true; form.submit(); }
+  else { btn.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Found Report'; btn.disabled = false; }
+}
+
+function onDescInput() {
+  const itemName = document.getElementById('itemName')?.value || '';
+  const desc     = document.getElementById('itemDesc')?.value || '';
+  const category = document.getElementById('categorySelect')?.value || 'Other';
+  const location = document.getElementById('locationInput')?.value || '';
+  if (itemName.length > 3 || desc.length > 10) {
+    const tags = autoTag(itemName, desc);
+    displayTags(tags);
+    document.getElementById('tagsHidden').value = tags.join(',');
+    if (desc.length > 15) {
+      const summary = generateSummary(itemName, desc, category, location, 'Found');
+      document.getElementById('aiSummaryText').textContent = summary;
+      document.getElementById('aiSummaryBox').style.display = 'block';
+    }
+  }
+  loadNearbyLost();
+}
+
+async function loadNearbyLost() {
+  const cat = document.getElementById('categorySelect')?.value || '';
+  const loc = document.getElementById('locationInput')?.value || '';
+  if (!cat || cat === 'Other') return;
+  try {
+    const res = await fetch(`/api/items/search?q=${encodeURIComponent(cat + ' ' + loc)}`);
+    const items = await res.json();
+    const lostItems = items.filter(i => i.type === 'Lost').slice(0, 3);
+    const panel = document.getElementById('nearbyPanel');
+    if (lostItems.length === 0) {
+      panel.innerHTML = '<div style="text-align:center;color:var(--text-muted);font-size:12px">No similar lost reports found. This item might be unique!</div>';
+      return;
+    }
+    panel.innerHTML = `
+      <div style="font-size:11.5px;color:var(--text-muted);margin-bottom:10px">Found ${lostItems.length} similar lost item(s):</div>
+      ${lostItems.map(i => `
+        <a href="/item/${i.id}" target="_blank" style="display:block;padding:8px;border:1px solid var(--border);border-radius:var(--radius);margin-bottom:6px;text-decoration:none;transition:var(--transition-fast)" onmouseover="this.style.borderColor='var(--border-hover)'" onmouseout="this.style.borderColor='var(--border)'">
+          <div style="font-size:12.5px;font-weight:600;color:var(--text-primary)">${i.item_name || i.description?.slice(0,30) || 'Item'}</div>
+          <div style="font-size:11px;color:var(--text-muted)"><i class="fas fa-map-marker-alt"></i> ${i.location || ''}</div>
+        </a>
+      `).join('')}
+    `;
+  } catch(e) {}
+}
+
+document.getElementById('categorySelect')?.addEventListener('change', loadNearbyLost);
+document.getElementById('locationInput')?.addEventListener('input', loadNearbyLost);
+
+// ── Interactive Map Initialization ──
+let map, marker;
+const defaultLat = 13.0827;
+const defaultLng = 80.2707;
+
+function initMap() {
+  const mapElement = document.getElementById('map');
+  if (!mapElement) return;
+
+  map = L.map('map').setView([defaultLat, defaultLng], 15);
+
+  const theme = document.documentElement.getAttribute('data-theme') || 'dark';
+  let tileUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+  let tileAttrib = '&copy; <a href="https://openstreetmap.org">OpenStreetMap</a> contributors';
+
+  if (theme === 'dark') {
+    tileUrl = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+    tileAttrib = '&copy; <a href="https://openstreetmap.org">OpenStreetMap</a> &copy; <a href="https://carto.com">CARTO</a>';
+  }
+
+  L.tileLayer(tileUrl, {
+    attribution: tileAttrib,
+    maxZoom: 19
+  }).addTo(map);
+
+  marker = L.marker([defaultLat, defaultLng], { draggable: true }).addTo(map);
+
+  map.on('click', function(e) {
+    updateMarkerPosition(e.latlng.lat, e.latlng.lng);
+  });
+
+  marker.on('dragend', function(e) {
+    const pos = marker.getLatLng();
+    updateMarkerPosition(pos.lat, pos.lng);
+  });
+}
+
+async function updateMarkerPosition(lat, lng) {
+  marker.setLatLng([lat, lng]);
+  const locationInput = document.getElementById('locationInput');
+  locationInput.value = `Loading address (${lat.toFixed(4)}, ${lng.toFixed(4)})…`;
+
+  try {
+    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`, {
+      headers: { 'Accept-Language': 'en' }
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.display_name) {
+        let address = data.display_name;
+        const d = data.address;
+        const parts = [];
+        if (d.amenity) parts.push(d.amenity);
+        else if (d.building) parts.push(d.building);
+        
+        if (d.road) parts.push(d.road);
+        if (d.suburb) parts.push(d.suburb);
+        if (d.city || d.town || d.village) parts.push(d.city || d.town || d.village);
+        
+        if (parts.length > 0) address = parts.join(', ');
+        locationInput.value = address;
+      } else {
+        locationInput.value = `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+      }
+    } else {
+      locationInput.value = `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+    }
+  } catch (e) {
+    locationInput.value = `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+  }
+
+  loadNearbyLost();
+}
+
+// ── Webcam & Snapshot Logic ──
+let webcamStream = null;
+
+function switchImageTab(tab) {
+  const uploadBtn = document.getElementById('btnUploadTab');
+  const cameraBtn = document.getElementById('btnCameraTab');
+  const uploadContainer = document.getElementById('uploadTabContainer');
+  const cameraContainer = document.getElementById('cameraTabContainer');
+
+  if (tab === 'upload') {
+    uploadBtn.classList.add('active');
+    cameraBtn.classList.remove('active');
+    uploadContainer.style.display = 'block';
+    cameraContainer.style.display = 'none';
+    stopWebcam();
+    document.getElementById('camera_image').value = '';
+  } else {
+    cameraBtn.classList.add('active');
+    uploadBtn.classList.remove('active');
+    uploadContainer.style.display = 'none';
+    cameraContainer.style.display = 'block';
+    document.getElementById('imageInput').value = '';
+    resetCameraUI();
+  }
+}
+
+function previewImageFile(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  document.getElementById('camera_image').value = '';
+  const reader = new FileReader();
+  reader.onload = () => {
+    const preview = document.getElementById('preview');
+    if (preview) {
+      preview.src = reader.result;
+      preview.style.display = 'block';
+      const container = document.getElementById('uploadTabContainer');
+      const icon = container.querySelector('i');
+      const span = container.querySelector('span');
+      if (icon) icon.style.display = 'none';
+      if (span) span.style.display = 'none';
+    }
+  };
+  reader.readAsDataURL(file);
+}
+
+async function startWebcam() {
+  const video = document.getElementById('webcamVideo');
+  const streamContainer = document.getElementById('cameraStreamContainer');
+  const startBtn = document.getElementById('btnStartCamera');
+  const captureBtn = document.getElementById('btnCapturePhoto');
+  const stopBtn = document.getElementById('btnStopCamera');
+
+  try {
+    webcamStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'environment', width: { ideal: 640 }, height: { ideal: 480 } },
+      audio: false
+    });
+
+    video.srcObject = webcamStream;
+    streamContainer.style.display = 'block';
+    document.getElementById('cameraPreviewContainer').style.display = 'none';
+
+    startBtn.style.display = 'none';
+    captureBtn.style.display = 'inline-block';
+    stopBtn.style.display = 'inline-block';
+    document.getElementById('btnRetakePhoto').style.display = 'none';
+  } catch (err) {
+    console.error("Camera error: ", err);
+    showToast("Camera Access Failed", "Please verify camera permissions or upload an image.", "danger");
+  }
+}
+
+function stopWebcam() {
+  if (webcamStream) {
+    webcamStream.getTracks().forEach(track => track.stop());
+    webcamStream = null;
+  }
+  const video = document.getElementById('webcamVideo');
+  if (video) video.srcObject = null;
+  const container = document.getElementById('cameraStreamContainer');
+  if (container) container.style.display = 'none';
+}
+
+function resetCameraUI() {
+  stopWebcam();
+  document.getElementById('btnStartCamera').style.display = 'inline-block';
+  document.getElementById('btnCapturePhoto').style.display = 'none';
+  document.getElementById('btnRetakePhoto').style.display = 'none';
+  document.getElementById('btnStopCamera').style.display = 'none';
+  document.getElementById('cameraStreamContainer').style.display = 'none';
+  document.getElementById('cameraPreviewContainer').style.display = 'none';
+}
+
+function captureSnapshot() {
+  const video = document.getElementById('webcamVideo');
+  const canvas = document.createElement('canvas');
+  canvas.width = video.videoWidth || 640;
+  canvas.height = video.videoHeight || 480;
+
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+  const dataUrl = canvas.toDataURL('image/png');
+  document.getElementById('camera_image').value = dataUrl;
+
+  const previewImg = document.getElementById('cameraPreviewImg');
+  previewImg.src = dataUrl;
+  document.getElementById('cameraPreviewContainer').style.display = 'block';
+
+  stopWebcam();
+
+  document.getElementById('btnCapturePhoto').style.display = 'none';
+  document.getElementById('btnStopCamera').style.display = 'none';
+  document.getElementById('btnRetakePhoto').style.display = 'inline-block';
+}
+
+function retakePhoto() {
+  document.getElementById('camera_image').value = '';
+  document.getElementById('cameraPreviewContainer').style.display = 'none';
+  startWebcam();
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  initMap();
+});
+</script>
+{% endblock %}

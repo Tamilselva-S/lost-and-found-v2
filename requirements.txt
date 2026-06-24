@@ -1,0 +1,7 @@
+Flask
+mysql-connector-python
+yagmail
+fpdf
+gunicorn
+psycopg2-binary
+python-dotenv

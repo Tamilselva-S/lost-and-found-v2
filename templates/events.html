@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% block title %}Campus Events{% endblock %}
+{% block content %}
+
+<div class="page-header reveal">
+  <div>
+    <div class="breadcrumb"><a href="/">Home</a><span>/</span>Events</div>
+    <h1 class="page-title"><i class="fas fa-calendar-alt"></i>Campus Events</h1>
+    <div class="page-subtitle">Event-specific Lost &amp; Found sections for symposiums, hackathons, fests &amp; workshops</div>
+  </div>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 360px;gap:24px;align-items:start">
+
+  <!-- Events List -->
+  <div>
+    {% if events %}
+    <div class="stagger">
+      {% for ev in events %}
+      <div class="glass-card reveal" style="margin-bottom:16px">
+        <div class="card-body">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
+            <div style="flex:1">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap">
+                <span class="tag
+                  {{ 'tag-primary' if ev['event_type']=='Symposium' else
+                     'tag-info' if ev['event_type']=='Hackathon' else
+                     'tag-warning' if ev['event_type']=='Fest' else
+                     'tag-success' }}">
+                  <i class="fas fa-{{ 'graduation-cap' if ev['event_type']=='Symposium' else 'code' if ev['event_type']=='Hackathon' else 'music' if ev['event_type']=='Fest' else 'tools' }}"></i>
+                  {{ ev['event_type'] }}
+                </span>
+                {% if ev['active'] %}<span class="tag tag-success" style="font-size:10px">Active</span>{% else %}<span class="tag tag-muted" style="font-size:10px">Ended</span>{% endif %}
+              </div>
+              <div style="font-size:17px;font-weight:800;color:var(--text-primary);margin-bottom:6px">{{ ev['name'] }}</div>
+              {% if ev['description'] %}
+              <div style="font-size:13px;color:var(--text-secondary);margin-bottom:8px">{{ ev['description'] }}</div>
+              {% endif %}
+              <div style="display:flex;gap:16px;font-size:12px;color:var(--text-muted);flex-wrap:wrap">
+                <span><i class="fas fa-map-marker-alt"></i> {{ ev['location'] }}</span>
+                <span><i class="fas fa-calendar-plus"></i> {{ ev['start_date'] }}</span>
+                <span><i class="fas fa-calendar-minus"></i> {{ ev['end_date'] }}</span>
+              </div>
+            </div>
+            <div style="text-align:center;flex-shrink:0">
+              <div style="font-size:28px;font-weight:800;color:var(--primary-light)">{{ event_items.get(ev['id'], 0) }}</div>
+              <div style="font-size:11px;color:var(--text-muted)">Reports</div>
+            </div>
+          </div>
+          <div style="margin-top:12px;display:flex;gap:8px">
+            <a href="/view?q={{ ev['name'] }}" class="btn btn-ghost btn-sm"><i class="fas fa-eye"></i> View Items</a>
+            <a href="/lost?event={{ ev['id'] }}" class="btn btn-danger btn-sm" style="font-size:11px"><i class="fas fa-search-minus"></i> Report Lost</a>
+            <a href="/found?event={{ ev['id'] }}" class="btn btn-success btn-sm" style="font-size:11px"><i class="fas fa-search-plus"></i> Report Found</a>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state glass-card reveal" style="padding:64px">
+      <div class="empty-icon"><i class="fas fa-calendar-alt"></i></div>
+      <div class="empty-title">No Events Yet</div>
+      <div class="empty-sub">Create the first event to enable event-specific Lost &amp; Found sections for campus activities.</div>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Create Event Form -->
+  <div class="glass-card reveal">
+    <div class="card-header"><div class="card-title"><i class="fas fa-plus-circle"></i>Create New Event</div></div>
+    <div class="card-body">
+      <form action="/events" method="POST">
+        <div class="form-group">
+          <label class="form-label"><i class="fas fa-heading"></i>Event Name</label>
+          <input type="text" class="form-control" name="name" placeholder="e.g., TechFest 2025" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label"><i class="fas fa-tag"></i>Event Type</label>
+          <select class="form-control" name="event_type" required>
+            <option value="Symposium">🎓 Symposium</option>
+            <option value="Hackathon">💻 Hackathon</option>
+            <option value="Fest">🎉 College Fest</option>
+            <option value="Workshop">🔧 Workshop</option>
+            <option value="Sports">⚽ Sports Event</option>
+            <option value="Seminar">📚 Seminar</option>
+            <option value="Other">📌 Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label"><i class="fas fa-map-marker-alt"></i>Location / Venue</label>
+          <input type="text" class="form-control" name="location" placeholder="e.g., Main Auditorium" required>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Start Date</label>
+            <input type="date" class="form-control" name="start_date" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">End Date</label>
+            <input type="date" class="form-control" name="end_date" required>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label"><i class="fas fa-align-left"></i>Description (Optional)</label>
+          <textarea class="form-control" name="description" rows="2" placeholder="Brief event description…"></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary w-100"><i class="fas fa-calendar-plus"></i> Create Event</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

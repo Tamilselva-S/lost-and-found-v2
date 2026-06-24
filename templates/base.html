@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Lost & Found{% endblock %} — Tech Titans</title>
+  <meta name="description" content="{% block description %}Tech Titans Lost & Found Management System{% endblock %}">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Fraunces:ital,opsz,wght@1,40,500&display=swap" rel="stylesheet">
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <!-- Leaflet -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+  <!-- SortableJS -->
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}?v=1.4">
+
+  {% block head %}{% endblock %}
+</head>
+<body class="intro-active">
+
+<!-- ── Intro Sequence ──────────────────────────────────────────── -->
+<div id="intro" role="dialog" aria-modal="true" aria-label="Loading">
+  <div class="starfield" id="star-field" aria-hidden="true"></div>
+  <div class="intro-particles" aria-hidden="true" id="particle-field"></div>
+
+  <div class="hud-corner tl" aria-hidden="true">
+    <svg viewBox="0 0 46 46"><path d="M2 16 V2 H16" fill="none" stroke="#E2A33C" stroke-width="2"/></svg>
+  </div>
+  <div class="hud-corner tr" aria-hidden="true">
+    <svg viewBox="0 0 46 46"><path d="M2 16 V2 H16" fill="none" stroke="#E2A33C" stroke-width="2"/></svg>
+  </div>
+  <div class="hud-corner bl" aria-hidden="true">
+    <svg viewBox="0 0 46 46"><path d="M2 16 V2 H16" fill="none" stroke="#E2A33C" stroke-width="2"/></svg>
+  </div>
+  <div class="hud-corner br" aria-hidden="true">
+    <svg viewBox="0 0 46 46"><path d="M2 16 V2 H16" fill="none" stroke="#E2A33C" stroke-width="2"/></svg>
+  </div>
+
+  <div class="intro-content">
+    <div class="intro-stage">
+      <div class="intro-rings" aria-hidden="true">
+        <svg viewBox="0 0 340 340">
+          <circle class="c1" cx="170" cy="170" r="160"/>
+          <circle class="c2" cx="170" cy="170" r="128"/>
+          <circle class="c3" cx="170" cy="170" r="96"/>
+        </svg>
+      </div>
+      <span class="intro-dot d1"></span>
+      <span class="intro-dot d2"></span>
+      <span class="intro-dot d3"></span>
+
+      <div class="intro-logo-glow"></div>
+
+      <!-- Centered Logo Container -->
+      <div class="intro-logo-container" aria-hidden="true">
+        <img src="{{ url_for('static', filename='logo.png') }}" class="intro-logo-img" alt="Tech Titans Logo">
+      </div>
+
+      <!-- Eagle animation -->
+      <div class="eagle-fly" aria-hidden="true">
+        <svg viewBox="0 0 200 110" width="96" height="53">
+          <path d="M100 44 L70 16 L60 23 L50 13 L40 21 L28 9 L19 19 L7 11
+                   L17 29 L9 31 L21 37 L13 41 L25 45 L100 54 Z" fill="#1F3A56"/>
+          <path d="M100 44 L130 16 L140 23 L150 13 L160 21 L172 9 L181 19 L193 11
+                   L183 29 L191 31 L179 37 L187 41 L175 45 L100 54 Z" fill="#1F3A56"/>
+          <path d="M100 70 L88 96 L100 86 L112 96 Z" fill="#1F3A56"/>
+          <ellipse cx="100" cy="52" rx="15" ry="22" fill="#E2A33C"/>
+          <circle cx="100" cy="27" r="11" fill="#F4E9D8"/>
+          <path d="M100 29 L113 33 L100 39 Z" fill="#C2812A"/>
+          <circle cx="103.5" cy="25" r="1.8" fill="#0B1D30"/>
+        </svg>
+        <svg class="carried-item" viewBox="0 0 24 24" width="18" height="18">
+          <circle cx="12" cy="12" r="7" fill="none" stroke="#F4D9A6" stroke-width="3"/>
+        </svg>
+      </div>
+
+      <svg class="dropped-item" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+        <circle cx="12" cy="12" r="8" fill="none" stroke="#E2A33C" stroke-width="3"/>
+      </svg>
+
+      <svg class="eagle-perched" viewBox="0 0 100 120" width="78" height="94" aria-hidden="true">
+        <rect x="30" y="108" width="40" height="6" rx="3" fill="#3A5C7D"/>
+        <path d="M50 95 L40 118 L50 110 L60 118 Z" fill="#1F3A56"/>
+        <path d="M18 50 C8 65,10 85,22 98 L34 92 C26 80,26 64,32 52 Z" fill="#1F3A56"/>
+        <path d="M82 50 C92 65,90 85,78 98 L66 92 C74 80,74 64,68 52 Z" fill="#1F3A56"/>
+        <ellipse cx="50" cy="68" rx="24" ry="32" fill="#E2A33C"/>
+        <ellipse cx="50" cy="78" rx="14" ry="18" fill="#C2812A" opacity="0.35"/>
+        <path d="M40 100 L38 110 M50 102 L50 112 M60 100 L62 110" stroke="#C2812A" stroke-width="3" stroke-linecap="round"/>
+        <circle cx="50" cy="28" r="18" fill="#F4E9D8"/>
+        <path d="M34 18 Q42 11 48 18" stroke="#0B1D30" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+        <path d="M52 18 Q58 11 66 18" stroke="#0B1D30" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+        <circle cx="42" cy="24" r="2.6" fill="#0B1D30"/>
+        <circle cx="58" cy="24" r="2.6" fill="#0B1D30"/>
+        <path d="M42 30 L50 24 L58 30 L50 35 Z" fill="#9C6A22"/>
+        <path d="M40 31 Q50 40 60 31 Q56 38 50 39 Q44 38 40 31 Z" fill="#C2812A"/>
+      </svg>
+    </div>
+
+    <div class="intro-readout">
+      <div class="intro-eyebrow">Initializing portal</div>
+      <div class="intro-tagline">Lost <span class="amber">&amp;</span> Found <span class="amber">·</span> Tech Titans</div>
+    </div>
+
+    <div class="intro-loader" aria-hidden="true">
+      <span></span><span></span><span></span>
+    </div>
+  </div>
+
+  <button id="intro-skip" aria-label="Skip intro">Skip →</button>
+</div>
+<!-- End Intro -->
+
+<!-- Sidebar Overlay -->
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+<!-- ── Sidebar ──────────────────────────────────────────────────── -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" class="sidebar-logo">
+    <span class="sidebar-title">Lost &amp; Found</span>
+    <button class="sidebar-close" onclick="closeSidebar()" aria-label="Close sidebar"><i class="fas fa-times"></i></button>
+  </div>
+
+  <nav class="sidebar-nav" role="navigation">
+    <a href="/" class="nav-link {% if request.path=='/' %}active{% endif %}">
+      <i class="fas fa-home"></i><span>Home</span>
+    </a>
+
+    <div class="nav-section-label">Reports</div>
+    <a href="/lost" class="nav-link {% if request.path=='/lost' %}active{% endif %}">
+      <i class="fas fa-search-minus"></i><span>Report Lost</span>
+    </a>
+    <a href="/found" class="nav-link {% if request.path=='/found' %}active{% endif %}">
+      <i class="fas fa-search-plus"></i><span>Report Found</span>
+    </a>
+    <a href="/view" class="nav-link {% if request.path=='/view' %}active{% endif %}">
+      <i class="fas fa-th-large"></i><span>View All Items</span>
+    </a>
+
+    {% if session.get('is_admin') %}
+    <div class="nav-section-label">Admin</div>
+    <a href="/dashboard" class="nav-link {% if request.path=='/dashboard' %}active{% endif %}">
+      <i class="fas fa-chart-line"></i><span>Dashboard</span>
+    </a>
+    <a href="/admin/storage" class="nav-link {% if request.path=='/admin/storage' %}active{% endif %}">
+      <i class="fas fa-warehouse"></i><span>Storage Room</span>
+    </a>
+    <a href="/admin/analytics" class="nav-link {% if '/admin/analytics' in request.path %}active{% endif %}">
+      <i class="fas fa-chart-bar"></i><span>Analytics</span>
+    </a>
+    <a href="/admin/audit" class="nav-link {% if '/admin/audit' in request.path %}active{% endif %}">
+      <i class="fas fa-history"></i><span>Audit Log</span>
+    </a>
+    <a href="/admin/announcements" class="nav-link {% if '/admin/announcements' in request.path %}active{% endif %}">
+      <i class="fas fa-bullhorn"></i><span>Announcements</span>
+    </a>
+    <a href="/export/csv" class="nav-link">
+      <i class="fas fa-file-csv"></i><span>Export CSV</span>
+    </a>
+    <a href="/export/pdf" class="nav-link">
+      <i class="fas fa-file-pdf"></i><span>Export PDF</span>
+    </a>
+    <a href="/admin/logout" class="nav-link" style="color:var(--danger)">
+      <i class="fas fa-sign-out-alt"></i><span>Logout</span>
+    </a>
+    {% else %}
+    <div class="nav-section-label">Admin</div>
+    <a href="/admin/login" class="nav-link {% if request.path=='/admin/login' %}active{% endif %}">
+      <i class="fas fa-lock"></i><span>Admin Login</span>
+    </a>
+    {% endif %}
+
+    <div class="nav-section-label">Community</div>
+    <a href="/events" class="nav-link {% if request.path=='/events' %}active{% endif %}">
+      <i class="fas fa-calendar-alt"></i><span>Events</span>
+    </a>
+    <a href="/volunteers" class="nav-link {% if request.path=='/volunteers' %}active{% endif %}">
+      <i class="fas fa-hands-helping"></i><span>Volunteers</span>
+    </a>
+    <a href="/success-stories" class="nav-link {% if '/success-stories' in request.path %}active{% endif %}">
+      <i class="fas fa-trophy"></i><span>Success Stories</span>
+    </a>
+  </nav>
+
+  <div class="sidebar-footer">
+    <span class="text-gradient" style="font-weight:700;font-family:'Space Grotesk',sans-serif">Tech Titans</span> &middot; &copy; 2025
+  </div>
+</aside>
+
+<!-- ── Main Wrapper ─────────────────────────────────────────────── -->
+<div class="main-wrapper">
+
+  <!-- Sticky Navbar -->
+  <nav class="navbar" id="site-nav" role="navigation">
+    <div class="navbar-left">
+      <button class="hamburger" id="hamburger" onclick="toggleSidebar()" aria-label="Toggle sidebar">
+        <i class="fas fa-bars"></i>
+      </button>
+      <a href="/" class="navbar-brand">
+        <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" class="nav-logo">
+        <span>Lost &amp; Found</span>
+      </a>
+    </div>
+
+    <div class="navbar-right">
+      <div class="search-box" id="globalSearch">
+        <i class="fas fa-search"></i>
+        <input type="text" id="searchInput" placeholder="Search items… (press /)" autocomplete="off" aria-label="Search items">
+        <div class="search-dropdown" id="searchDropdown" role="listbox"></div>
+      </div>
+
+      <button class="theme-switch" id="themeToggle" onclick="toggleTheme()" title="Toggle theme" aria-label="Toggle dark/light mode">
+        <div class="theme-switch-track">
+          <i class="fas fa-sun sun-icon"></i>
+          <i class="fas fa-moon moon-icon"></i>
+          <div class="theme-switch-thumb">
+            <i class="fas fa-moon" id="themeIcon"></i>
+          </div>
+        </div>
+      </button>
+
+      <button class="icon-btn" id="notificationsBtn" title="Notifications" aria-label="Notifications">
+        <i class="fas fa-bell"></i>
+        <span class="badge-dot"></span>
+      </button>
+
+      {% if session.get('is_admin') %}
+      <a href="/admin/logout" class="icon-btn" title="Logout" style="color:var(--danger)" aria-label="Logout">
+        <i class="fas fa-sign-out-alt"></i>
+      </a>
+      {% endif %}
+    </div>
+  </nav>
+
+  <!-- Flash Messages -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="flash-container" role="alert">
+        {% for category, message in messages %}
+          <div class="flash flash-{{ category }}">
+            <i class="fas {% if category=='success' %}fa-check-circle{% elif category=='danger' %}fa-exclamation-circle{% else %}fa-info-circle{% endif %}"></i>
+            {{ message }}
+            <button class="flash-close" onclick="this.parentElement.remove()" aria-label="Dismiss">&times;</button>
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  <!-- Page Content -->
+  <main class="page-content" id="main-content">
+    {% block content %}{% endblock %}
+  </main>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toastContainer" role="status" aria-live="polite"></div>
+
+<!-- Floating Action Button -->
+<div class="fab-container" id="fabContainer">
+  <button class="fab-main" id="fabMain" onclick="toggleFab()" title="Quick Actions" aria-label="Quick actions">
+    <i class="fas fa-plus"></i>
+  </button>
+  <div class="fab-menu" id="fabMenu">
+    <a href="/lost" class="fab-item">
+      <span class="fab-label">Report Lost</span>
+      <button class="fab-btn fab-lost" aria-label="Report lost item"><i class="fas fa-search-minus"></i></button>
+    </a>
+    <a href="/found" class="fab-item">
+      <span class="fab-label">Report Found</span>
+      <button class="fab-btn fab-found" aria-label="Report found item"><i class="fas fa-search-plus"></i></button>
+    </a>
+    <a href="/view" class="fab-item">
+      <span class="fab-label">Browse All</span>
+      <button class="fab-btn fab-dash" aria-label="Browse items"><i class="fas fa-th-large"></i></button>
+    </a>
+  </div>
+</div>
+
+<!-- JS -->
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+<script src="{{ url_for('static', filename='js/ai_features.js') }}"></script>
+<script src="{{ url_for('static', filename='js/search.js') }}"></script>
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+
+<!-- Intro + Reveal Script -->
+<script>
+(function() {
+  // ── Stars ────────────────────────────────────────────────────
+  const sf = document.getElementById('star-field');
+  for (let i = 0; i < 90; i++) {
+    const s = document.createElement('div');
+    s.className = 'star';
+    const sz = Math.random() * 2.5 + 0.5;
+    Object.assign(s.style, {
+      width: sz + 'px', height: sz + 'px',
+      top: Math.random() * 100 + '%',
+      left: Math.random() * 100 + '%',
+      animationDuration: (Math.random() * 4 + 2) + 's',
+      animationDelay: (Math.random() * 4) + 's'
+    });
+    sf.appendChild(s);
+  }
+
+  // ── Particles ─────────────────────────────────────────────────
+  const pf = document.getElementById('particle-field');
+  for (let i = 0; i < 22; i++) {
+    const p = document.createElement('div');
+    p.className = 'p-dot';
+    const sz = Math.random() * 3 + 1.5;
+    Object.assign(p.style, {
+      width: sz + 'px', height: sz + 'px',
+      left: Math.random() * 100 + '%',
+      bottom: -(sz) + 'px',
+      animationDuration: (Math.random() * 8 + 6) + 's',
+      animationDelay: (Math.random() * 6) + 's',
+      opacity: 0
+    });
+    pf.appendChild(p);
+  }
+
+  // ── Dismiss intro ─────────────────────────────────────────────
+  function dismissIntro() {
+    const intro = document.getElementById('intro');
+    intro.classList.add('hide');
+    document.body.classList.remove('intro-active');
+    sessionStorage.setItem('introSeen', '1');
+  }
+
+  // Auto dismiss after 3s
+  const introTimer = setTimeout(dismissIntro, 3000);
+
+  document.getElementById('intro-skip').addEventListener('click', () => {
+    clearTimeout(introTimer);
+    dismissIntro();
+  });
+
+  // If already seen this session, skip immediately
+  if (sessionStorage.getItem('introSeen')) {
+    clearTimeout(introTimer);
+    const intro = document.getElementById('intro');
+    intro.style.display = 'none';
+    document.body.classList.remove('intro-active');
+  }
+
+  // ── Reveal on scroll ──────────────────────────────────────────
+  const revealEls = document.querySelectorAll('.reveal');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target); } });
+  }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+  revealEls.forEach(el => observer.observe(el));
+
+  // ── Navbar scroll shadow ───────────────────────────────────────
+  const navbar = document.getElementById('site-nav');
+  window.addEventListener('scroll', () => {
+    navbar.classList.toggle('scrolled', window.scrollY > 20);
+  }, { passive: true });
+})();
+
+// ── Theme toggle ─────────────────────────────────────────────────
+function toggleTheme() {
+  const html = document.documentElement;
+  const isDark = html.getAttribute('data-theme') === 'dark';
+  const nextTheme = isDark ? 'light' : 'dark';
+  html.setAttribute('data-theme', nextTheme);
+  localStorage.setItem('theme', nextTheme);
+  localStorage.setItem('lf_theme', nextTheme);
+  updateThemeUI(nextTheme);
+  if (typeof showToast === 'function') {
+    showToast('Theme Changed', `Switched to ${nextTheme} mode`, nextTheme === 'dark' ? 'info' : 'warning');
+  }
+}
+
+function updateThemeUI(theme) {
+  const icon = document.getElementById('themeIcon');
+  if (icon) {
+    icon.className = theme === 'dark' ? 'fas fa-moon' : 'fas fa-sun';
+  }
+}
+
+// Apply saved theme
+(function() {
+  const saved = localStorage.getItem('theme') || localStorage.getItem('lf_theme') || 'light';
+  document.documentElement.setAttribute('data-theme', saved);
+  setTimeout(() => {
+    updateThemeUI(saved);
+  }, 0);
+})();
+
+// ── Sidebar ───────────────────────────────────────────────────────
+function toggleSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('sidebarOverlay');
+  sidebar.classList.toggle('open');
+  overlay.classList.toggle('show');
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebarOverlay').classList.remove('show');
+}
+
+// ── FAB ───────────────────────────────────────────────────────────
+function toggleFab() {
+  const menu = document.getElementById('fabMenu');
+  const btn  = document.getElementById('fabMain');
+  menu.classList.toggle('open');
+  btn.classList.toggle('open');
+}
+document.addEventListener('click', e => {
+  const fab = document.getElementById('fabContainer');
+  if (fab && !fab.contains(e.target)) {
+    document.getElementById('fabMenu')?.classList.remove('open');
+    document.getElementById('fabMain')?.classList.remove('open');
+  }
+});
+
+// ── Counter animation ─────────────────────────────────────────────
+function animateCount(el) {
+  const target = parseInt(el.dataset.count || el.textContent);
+  if (isNaN(target) || target === 0) return;
+  const duration = 1800, start = performance.now();
+  function step(now) {
+    const p = Math.min((now - start) / duration, 1);
+    const ease = 1 - Math.pow(1 - p, 4);
+    el.textContent = Math.round(ease * target);
+    if (p < 1) requestAnimationFrame(step);
+    else el.textContent = target;
+  }
+  requestAnimationFrame(step);
+}
+document.querySelectorAll('[data-count]').forEach(animateCount);
+
+// ── Toast ─────────────────────────────────────────────────────────
+function showToast(title, msg, type='info', duration=4000) {
+  const icons = { success:'check-circle', danger:'exclamation-circle', warning:'exclamation-triangle', info:'info-circle' };
+  const toast = document.createElement('div');
+  toast.className = `toast toast-${type}`;
+  toast.innerHTML = `
+    <div class="toast-icon"><i class="fas fa-${icons[type]||'info-circle'}"></i></div>
+    <div class="toast-body"><div class="toast-title">${title}</div><div class="toast-msg">${msg}</div></div>
+    <button class="toast-close" onclick="this.closest('.toast').remove()">&times;</button>`;
+  document.getElementById('toastContainer').appendChild(toast);
+  setTimeout(() => { toast.classList.add('leaving'); setTimeout(() => toast.remove(), 300); }, duration);
+}
+
+// ── Keyboard shortcut: "/" to focus search ────────────────────────
+document.addEventListener('keydown', e => {
+  if (e.key === '/' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+    e.preventDefault();
+    document.getElementById('searchInput')?.focus();
+  }
+  if (e.key === 'Escape') { closeSidebar(); }
+});
+</script>
+
+{% block scripts %}{% endblock %}
+</body>
+</html>

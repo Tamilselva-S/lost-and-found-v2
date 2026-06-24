@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Contact Reporter{% endblock %}
+{% block content %}
+
+<div style="display: flex; justify-content: center; align-items: center; min-height: 60vh;">
+  <div class="glass-card reveal" style="width: 100%; max-width: 500px; padding: 32px; border-radius: var(--radius-lg)">
+    <div style="text-align: center; margin-bottom: 24px;">
+      <div style="font-size: 48px; margin-bottom: 12px; color: var(--success)">
+        <i class="fas fa-envelope-open-text"></i>
+      </div>
+      <h2 style="font-size: 24px; font-weight: 700; color: var(--text-primary)">Contact Reporter</h2>
+      <p style="font-size: 13.5px; color: var(--text-muted)">Provide your contact info to unlock the reporter's details</p>
+    </div>
+
+    <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; margin-bottom: 20px;">
+      <div style="font-size: 12px; color: var(--text-muted)">ITEM DESCRIPTION</div>
+      <div style="font-weight: 600; color: var(--text-primary); margin-top: 4px;">{{ item['item_name'] or item['description'][:40] }}</div>
+      <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;"><i class="fas fa-map-marker-alt"></i> {{ item['location'] }}</div>
+    </div>
+
+    <form method="POST" action="/contact/{{ item['id'] }}">
+      <div class="form-group" style="margin-bottom: 16px;">
+        <label class="form-label">Your Name</label>
+        <input type="text" class="form-control" name="viewer_name" placeholder="Enter your full name" required>
+      </div>
+      <div class="form-group" style="margin-bottom: 16px;">
+        <label class="form-label">Your Contact Details</label>
+        <input type="text" class="form-control" name="viewer_contact" placeholder="Phone number or Email" required>
+      </div>
+      <div class="form-group" style="margin-bottom: 20px;">
+        <label class="form-label">Message</label>
+        <textarea class="form-control" name="viewer_message" rows="3" placeholder="Enter a brief message for the reporter" required></textarea>
+      </div>
+      <button type="submit" class="btn btn-primary w-100" style="padding: 12px;"><i class="fas fa-unlock"></i> Unlock Contact Info</button>
+    </form>
+  </div>
+</div>
+
+{% endblock %}
