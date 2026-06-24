@@ -1,7 +1,11 @@
 from flask import Flask, render_template, request, redirect, url_for, jsonify, session, flash, g
+<<<<<<< HEAD
 import psycopg2
 import psycopg2.extras
 import psycopg2.errors
+=======
+import sqlite3
+>>>>>>> 675eecd2dbde899c0446afec0365b5b27fe8759b
 import os
 from datetime import datetime, timedelta
 import yagmail
@@ -19,19 +23,27 @@ app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
 app.secret_key = os.environ.get('SECRET_KEY', 'lf_secret_tech_titans_2025')
 
+<<<<<<< HEAD
 class ChainedCursor(psycopg2.extras.DictCursor):
     def execute(self, query, vars=None):
         super().execute(query, vars)
         return self
 
+=======
+>>>>>>> 675eecd2dbde899c0446afec0365b5b27fe8759b
 # ─── SQLite per-request setup (replacing global conn/cursor) ───
 def get_db():
     db = getattr(g, '_database', None)
     if db is None:
+<<<<<<< HEAD
         db_url = os.environ.get('DATABASE_URL')
         if not db_url:
             raise Exception("DATABASE_URL environment variable is not set")
         db = g._database = psycopg2.connect(db_url, cursor_factory=ChainedCursor)
+=======
+        db = g._database = sqlite3.connect("lost_found.db", check_same_thread=False)
+        db.row_factory = sqlite3.Row
+>>>>>>> 675eecd2dbde899c0446afec0365b5b27fe8759b
     return db
 
 @app.teardown_appcontext
@@ -41,6 +53,7 @@ def close_connection(exception):
         db.close()
 
 def init_db():
+<<<<<<< HEAD
     db_url = os.environ.get('DATABASE_URL')
     if not db_url:
         return
@@ -49,6 +62,14 @@ def init_db():
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS items (
             id SERIAL PRIMARY KEY,
+=======
+    db = sqlite3.connect("lost_found.db")
+    db.row_factory = sqlite3.Row
+    cursor = db.cursor()
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS items (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+>>>>>>> 675eecd2dbde899c0446afec0365b5b27fe8759b
             type TEXT,
             name TEXT,
             description TEXT,
@@ -74,19 +95,32 @@ def init_db():
         try:
             cursor.execute(f"ALTER TABLE items ADD COLUMN {_col} {_def}")
             db.commit()
+<<<<<<< HEAD
         except Exception as e:
             db.rollback()
 
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS item_timeline (
         id SERIAL PRIMARY KEY,
+=======
+        except Exception:
+            pass
+
+    cursor.executescript("""
+    CREATE TABLE IF NOT EXISTS item_timeline (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+>>>>>>> 675eecd2dbde899c0446afec0365b5b27fe8759b
         item_id INTEGER,
         event TEXT,
         details TEXT,
         timestamp TEXT
     );
     CREATE TABLE IF NOT EXISTS claims (
+<<<<<<< HEAD
         id SERIAL PRIMARY KEY,
+=======
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+>>>>>>> 675eecd2dbde899c0446afec0365b5b27fe8759b
         item_id INTEGER,
         claimant_name TEXT,
         claimant_contact TEXT,
@@ -95,7 +129,11 @@ def init_db():
         submitted_at TEXT
     );
     CREATE TABLE IF NOT EXISTS storage (
+<<<<<<< HEAD
         id SERIAL PRIMARY KEY,
+=======
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+>>>>>>> 675eecd2dbde899c0446afec0365b5b27fe8759b
         item_id INTEGER,
         rack_number TEXT,
         shelf_number TEXT,
@@ -104,14 +142,22 @@ def init_db():
         collected INTEGER DEFAULT 0
     );
     CREATE TABLE IF NOT EXISTS audit_log (
+<<<<<<< HEAD
         id SERIAL PRIMARY KEY,
+=======
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+>>>>>>> 675eecd2dbde899c0446afec0365b5b27fe8759b
         action TEXT,
         details TEXT,
         contact TEXT,
         timestamp TEXT
     );
     CREATE TABLE IF NOT EXISTS announcements (
+<<<<<<< HEAD
         id SERIAL PRIMARY KEY,
+=======
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+>>>>>>> 675eecd2dbde899c0446afec0365b5b27fe8759b
         title TEXT,
         message TEXT,
         type TEXT DEFAULT 'info',
@@ -120,7 +166,11 @@ def init_db():
         active INTEGER DEFAULT 1
     );
     CREATE TABLE IF NOT EXISTS events (
+<<<<<<< HEAD
         id SERIAL PRIMARY KEY,
+=======
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+>>>>>>> 675eecd2dbde899c0446afec0365b5b27fe8759b
         name TEXT,
         event_type TEXT,
         location TEXT,
@@ -130,7 +180,11 @@ def init_db():
         active INTEGER DEFAULT 1
     );
     CREATE TABLE IF NOT EXISTS volunteers (
+<<<<<<< HEAD
         id SERIAL PRIMARY KEY,
+=======
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+>>>>>>> 675eecd2dbde899c0446afec0365b5b27fe8759b
         name TEXT,
         contact TEXT,
         role TEXT DEFAULT 'Helper',
@@ -139,7 +193,11 @@ def init_db():
         active INTEGER DEFAULT 1
     );
     CREATE TABLE IF NOT EXISTS success_stories (
+<<<<<<< HEAD
         id SERIAL PRIMARY KEY,
+=======
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+>>>>>>> 675eecd2dbde899c0446afec0365b5b27fe8759b
         item_id INTEGER,
         title TEXT,
         story TEXT,
@@ -149,7 +207,11 @@ def init_db():
         approved INTEGER DEFAULT 1
     );
     CREATE TABLE IF NOT EXISTS feedback (
+<<<<<<< HEAD
         id SERIAL PRIMARY KEY,
+=======
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+>>>>>>> 675eecd2dbde899c0446afec0365b5b27fe8759b
         item_id INTEGER,
         name TEXT,
         rating INTEGER,
@@ -157,14 +219,22 @@ def init_db():
         submitted_at TEXT
     );
     CREATE TABLE IF NOT EXISTS badges (
+<<<<<<< HEAD
         id SERIAL PRIMARY KEY,
+=======
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+>>>>>>> 675eecd2dbde899c0446afec0365b5b27fe8759b
         contact TEXT,
         badge_name TEXT,
         badge_icon TEXT,
         earned_at TEXT
     );
     CREATE TABLE IF NOT EXISTS appointments (
+<<<<<<< HEAD
         id SERIAL PRIMARY KEY,
+=======
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+>>>>>>> 675eecd2dbde899c0446afec0365b5b27fe8759b
         item_id INTEGER,
         name TEXT,
         contact TEXT,
@@ -174,12 +244,20 @@ def init_db():
         created_at TEXT
     );
     CREATE TABLE IF NOT EXISTS item_tags (
+<<<<<<< HEAD
         id SERIAL PRIMARY KEY,
+=======
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+>>>>>>> 675eecd2dbde899c0446afec0365b5b27fe8759b
         item_id INTEGER,
         tag TEXT
     );
     CREATE TABLE IF NOT EXISTS staff_emails (
+<<<<<<< HEAD
         id SERIAL PRIMARY KEY,
+=======
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+>>>>>>> 675eecd2dbde899c0446afec0365b5b27fe8759b
         email TEXT UNIQUE NOT NULL
     );
     """)
@@ -192,9 +270,15 @@ def init_db():
         recipients_list = [email.strip() for email in recipients_str.split(",") if email.strip()]
         for r_email in recipients_list:
             try:
+<<<<<<< HEAD
                 cursor.execute("INSERT INTO staff_emails (email) VALUES (%s) ON CONFLICT (email) DO NOTHING", (r_email,))
             except Exception as e:
                 db.rollback()
+=======
+                cursor.execute("INSERT OR IGNORE INTO staff_emails (email) VALUES (?)", (r_email,))
+            except Exception:
+                pass
+>>>>>>> 675eecd2dbde899c0446afec0365b5b27fe8759b
         db.commit()
 
     db.close()
@@ -228,7 +312,11 @@ def log_audit(action, details, contact="System"):
     db = get_db()
     cursor = db.cursor()
     cursor.execute(
+<<<<<<< HEAD
         "INSERT INTO audit_log (action, details, contact, timestamp) VALUES (%s,%s,%s,%s)",
+=======
+        "INSERT INTO audit_log (action, details, contact, timestamp) VALUES (?,?,?,?)",
+>>>>>>> 675eecd2dbde899c0446afec0365b5b27fe8759b
         (action, details, contact, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
     )
     db.commit()
@@ -238,7 +326,11 @@ def add_timeline_event(item_id, event, details=""):
     db = get_db()
     cursor = db.cursor()
     cursor.execute(
+<<<<<<< HEAD
         "INSERT INTO item_timeline (item_id, event, details, timestamp) VALUES (%s,%s,%s,%s)",
+=======
+        "INSERT INTO item_timeline (item_id, event, details, timestamp) VALUES (?,?,?,?)",
+>>>>>>> 675eecd2dbde899c0446afec0365b5b27fe8759b
         (item_id, event, details, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
     )
     db.commit()
@@ -248,7 +340,11 @@ def check_and_award_badges(contact):
     """Award badges based on contribution thresholds."""
     db = get_db()
     cursor = db.cursor()
+<<<<<<< HEAD
     cursor.execute("SELECT COUNT(*) FROM items WHERE contact=%s", (contact,))
+=======
+    cursor.execute("SELECT COUNT(*) FROM items WHERE contact=?", (contact,))
+>>>>>>> 675eecd2dbde899c0446afec0365b5b27fe8759b
     count = cursor.fetchone()[0]
 
     badge_rules = [
@@ -261,12 +357,20 @@ def check_and_award_badges(contact):
     for threshold, badge_name, badge_icon in badge_rules:
         if count >= threshold:
             existing = cursor.execute(
+<<<<<<< HEAD
                 "SELECT id FROM badges WHERE contact=%s AND badge_name=%s",
+=======
+                "SELECT id FROM badges WHERE contact=? AND badge_name=?",
+>>>>>>> 675eecd2dbde899c0446afec0365b5b27fe8759b
                 (contact, badge_name)
             ).fetchone()
             if not existing:
                 cursor.execute(
+<<<<<<< HEAD
                     "INSERT INTO badges (contact, badge_name, badge_icon, earned_at) VALUES (%s,%s,%s,%s)",
+=======
+                    "INSERT INTO badges (contact, badge_name, badge_icon, earned_at) VALUES (?,?,?,?)",
+>>>>>>> 675eecd2dbde899c0446afec0365b5b27fe8759b
                     (contact, badge_name, badge_icon, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
                 )
     db.commit()
@@ -292,7 +396,11 @@ def get_active_announcements():
     cursor = db.cursor()
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     return cursor.execute(
+<<<<<<< HEAD
         "SELECT * FROM announcements WHERE active=1 AND (expires_at IS NULL OR expires_at > %s) ORDER BY created_at DESC LIMIT 3",
+=======
+        "SELECT * FROM announcements WHERE active=1 AND (expires_at IS NULL OR expires_at > ?) ORDER BY created_at DESC LIMIT 3",
+>>>>>>> 675eecd2dbde899c0446afec0365b5b27fe8759b
         (now,)
     ).fetchall()
 
@@ -301,7 +409,11 @@ def get_matches(item_name, category, location, description, target_type='Found')
     db = get_db()
     cursor = db.cursor()
     candidates = cursor.execute(
+<<<<<<< HEAD
         "SELECT * FROM items WHERE type=%s AND status='Active'", (target_type,)
+=======
+        "SELECT * FROM items WHERE type=? AND status='Active'", (target_type,)
+>>>>>>> 675eecd2dbde899c0446afec0365b5b27fe8759b
     ).fetchall()
     matches = []
     
@@ -475,13 +587,22 @@ def lost():
         cursor.execute(
             "INSERT INTO items (type, name, description, location, contact, image, date, "
             "category, is_emergency, status, event_id, tags, item_name) "
+<<<<<<< HEAD
             "VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id",
+=======
+            "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
+>>>>>>> 675eecd2dbde899c0446afec0365b5b27fe8759b
             ('Lost', name, description, location, contact, filename,
              datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
              category, is_emergency, 'Active', event_id, tags, item_name)
         )
+<<<<<<< HEAD
         new_id = cursor.fetchone()['id']
         db.commit()
+=======
+        db.commit()
+        new_id = cursor.lastrowid
+>>>>>>> 675eecd2dbde899c0446afec0365b5b27fe8759b
 
         add_timeline_event(new_id, "Reported Lost", f"Reported by {name} at {location}")
         log_audit("Report Lost", f"Item '{item_name or description[:30]}' reported lost by {name}", contact)
@@ -536,13 +657,22 @@ def found():
         cursor.execute(
             "INSERT INTO items (type, name, description, location, contact, image, date, "
             "category, status, event_id, tags, item_name, item_condition) "
+<<<<<<< HEAD
             "VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id",
+=======
+            "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
+>>>>>>> 675eecd2dbde899c0446afec0365b5b27fe8759b
             ('Found', name, description, location, contact, filename,
              datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
              category, 'Active', event_id, tags, item_name, item_condition)
         )
+<<<<<<< HEAD
         new_id = cursor.fetchone()['id']
         db.commit()
+=======
+        db.commit()
+        new_id = cursor.lastrowid
+>>>>>>> 675eecd2dbde899c0446afec0365b5b27fe8759b
 
         add_timeline_event(new_id, "Reported Found", f"Found by {name} at {location}")
         log_audit("Report Found", f"Item '{item_name or description[:30]}' found by {name}", contact)
@@ -578,6 +708,7 @@ def view_items():
     query  = "SELECT * FROM items WHERE 1=1"
     params = []
     if type_filter:
+<<<<<<< HEAD
         query += " AND type=%s"; params.append(type_filter)
     if category_filter:
         query += " AND category=%s"; params.append(category_filter)
@@ -593,6 +724,23 @@ def view_items():
         params.append(f"{date_from} 00:00:00")
     if date_to:
         query += " AND date <= %s"
+=======
+        query += " AND type=?"; params.append(type_filter)
+    if category_filter:
+        query += " AND category=?"; params.append(category_filter)
+    if status_filter:
+        query += " AND status=?"; params.append(status_filter)
+    if location_filter:
+        query += " AND location LIKE ?"; params.append(f"%{location_filter}%")
+    if search_q:
+        query += " AND (description LIKE ? OR item_name LIKE ? OR location LIKE ? OR name LIKE ?)"
+        params += [f"%{search_q}%"] * 4
+    if date_from:
+        query += " AND date >= ?"
+        params.append(f"{date_from} 00:00:00")
+    if date_to:
+        query += " AND date <= ?"
+>>>>>>> 675eecd2dbde899c0446afec0365b5b27fe8759b
         params.append(f"{date_to} 23:59:59")
 
     # Get total count for pagination
@@ -600,7 +748,11 @@ def view_items():
     total_items = cursor.execute(count_query, params).fetchone()[0]
     total_pages = math.ceil(total_items / per_page)
 
+<<<<<<< HEAD
     query += " ORDER BY date DESC LIMIT %s OFFSET %s"
+=======
+    query += " ORDER BY date DESC LIMIT ? OFFSET ?"
+>>>>>>> 675eecd2dbde899c0446afec0365b5b27fe8759b
     items = cursor.execute(query, params + [per_page, offset]).fetchall()
     
     categories = [r[0] for r in cursor.execute("SELECT DISTINCT category FROM items WHERE category IS NOT NULL").fetchall()]
@@ -621,17 +773,29 @@ def view_items():
 def delete_item(id):
     db = get_db()
     cursor = db.cursor()
+<<<<<<< HEAD
     result = cursor.execute("SELECT image, name, contact FROM items WHERE id=%s", (id,)).fetchone()
+=======
+    result = cursor.execute("SELECT image, name, contact FROM items WHERE id=?", (id,)).fetchone()
+>>>>>>> 675eecd2dbde899c0446afec0365b5b27fe8759b
     if result:
         image_path = os.path.join(app.config['UPLOAD_FOLDER'], result['image'])
         if os.path.exists(image_path) and result['image']:
             try:
                 os.remove(image_path)
+<<<<<<< HEAD
             except Exception as e:
                 db.rollback()
         cursor.execute("DELETE FROM items WHERE id=%s", (id,))
         cursor.execute("DELETE FROM item_timeline WHERE item_id=%s", (id,))
         cursor.execute("DELETE FROM item_tags WHERE item_id=%s", (id,))
+=======
+            except Exception:
+                pass
+        cursor.execute("DELETE FROM items WHERE id=?", (id,))
+        cursor.execute("DELETE FROM item_timeline WHERE item_id=?", (id,))
+        cursor.execute("DELETE FROM item_tags WHERE item_id=?", (id,))
+>>>>>>> 675eecd2dbde899c0446afec0365b5b27fe8759b
         db.commit()
         log_audit("Delete Item", f"Item ID {id} '{result['name']}' deleted", result['contact'])
     return redirect(url_for('view_items'))
@@ -644,11 +808,16 @@ def delete_item(id):
 def item_detail(id):
     db = get_db()
     cursor = db.cursor()
+<<<<<<< HEAD
     item = cursor.execute("SELECT * FROM items WHERE id=%s", (id,)).fetchone()
+=======
+    item = cursor.execute("SELECT * FROM items WHERE id=?", (id,)).fetchone()
+>>>>>>> 675eecd2dbde899c0446afec0365b5b27fe8759b
     if not item:
         flash("Item not found.", "danger")
         return redirect(url_for('view_items'))
     # Increment view count
+<<<<<<< HEAD
     cursor.execute("UPDATE items SET view_count = COALESCE(view_count,0)+1 WHERE id=%s", (id,))
     db.commit()
     timeline = cursor.execute(
@@ -666,6 +835,25 @@ def item_detail(id):
     # Nearby similar items (same category or location)
     nearby = cursor.execute(
         "SELECT * FROM items WHERE id!=%s AND (category=%s OR location=%s) AND status='Active' LIMIT 4",
+=======
+    cursor.execute("UPDATE items SET view_count = COALESCE(view_count,0)+1 WHERE id=?", (id,))
+    db.commit()
+    timeline = cursor.execute(
+        "SELECT * FROM item_timeline WHERE item_id=? ORDER BY timestamp ASC", (id,)
+    ).fetchall()
+    claims = cursor.execute(
+        "SELECT * FROM claims WHERE item_id=? ORDER BY submitted_at DESC", (id,)
+    ).fetchall()
+    storage_info = cursor.execute(
+        "SELECT * FROM storage WHERE item_id=? ORDER BY id DESC LIMIT 1", (id,)
+    ).fetchone()
+    feedback_list = cursor.execute(
+        "SELECT * FROM feedback WHERE item_id=? ORDER BY submitted_at DESC", (id,)
+    ).fetchall()
+    # Nearby similar items (same category or location)
+    nearby = cursor.execute(
+        "SELECT * FROM items WHERE id!=? AND (category=? OR location=?) AND status='Active' LIMIT 4",
+>>>>>>> 675eecd2dbde899c0446afec0365b5b27fe8759b
         (id, item['category'], item['location'])
     ).fetchall()
     tags = item['tags'].split(',') if item['tags'] else []
@@ -690,13 +878,21 @@ def submit_claim(id):
 
     cursor.execute(
         "INSERT INTO claims (item_id, claimant_name, claimant_contact, claim_description, status, submitted_at) "
+<<<<<<< HEAD
         "VALUES (%s,%s,%s,%s,%s,%s)",
+=======
+        "VALUES (?,?,?,?,?,?)",
+>>>>>>> 675eecd2dbde899c0446afec0365b5b27fe8759b
         (id, claimant_name, claimant_contact, claim_desc, 'Pending',
          datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
     )
     db.commit()
     add_timeline_event(id, "Claim Requested", f"Claim submitted by {claimant_name}")
+<<<<<<< HEAD
     cursor.execute("UPDATE items SET status='Claimed' WHERE id=%s AND status='Active'", (id,))
+=======
+    cursor.execute("UPDATE items SET status='Claimed' WHERE id=? AND status='Active'", (id,))
+>>>>>>> 675eecd2dbde899c0446afec0365b5b27fe8759b
     db.commit()
     log_audit("Submit Claim", f"Claim for item {id} by {claimant_name}", claimant_contact)
     flash("Claim submitted successfully! Admin will verify.", "success")
@@ -708,10 +904,17 @@ def submit_claim(id):
 def approve_claim(claim_id):
     db = get_db()
     cursor = db.cursor()
+<<<<<<< HEAD
     claim = cursor.execute("SELECT * FROM claims WHERE id=%s", (claim_id,)).fetchone()
     if claim:
         cursor.execute("UPDATE claims SET status='Approved' WHERE id=%s", (claim_id,))
         cursor.execute("UPDATE items SET status='Recovered' WHERE id=%s", (claim['item_id'],))
+=======
+    claim = cursor.execute("SELECT * FROM claims WHERE id=?", (claim_id,)).fetchone()
+    if claim:
+        cursor.execute("UPDATE claims SET status='Approved' WHERE id=?", (claim_id,))
+        cursor.execute("UPDATE items SET status='Recovered' WHERE id=?", (claim['item_id'],))
+>>>>>>> 675eecd2dbde899c0446afec0365b5b27fe8759b
         db.commit()
         add_timeline_event(claim['item_id'], "Claim Approved", f"Approved for {claim['claimant_name']}")
         add_timeline_event(claim['item_id'], "Item Recovered", "Item successfully returned to owner")
@@ -725,10 +928,17 @@ def approve_claim(claim_id):
 def reject_claim(claim_id):
     db = get_db()
     cursor = db.cursor()
+<<<<<<< HEAD
     claim = cursor.execute("SELECT * FROM claims WHERE id=%s", (claim_id,)).fetchone()
     if claim:
         cursor.execute("UPDATE claims SET status='Rejected' WHERE id=%s", (claim_id,))
         cursor.execute("UPDATE items SET status='Active' WHERE id=%s", (claim['item_id'],))
+=======
+    claim = cursor.execute("SELECT * FROM claims WHERE id=?", (claim_id,)).fetchone()
+    if claim:
+        cursor.execute("UPDATE claims SET status='Rejected' WHERE id=?", (claim_id,))
+        cursor.execute("UPDATE items SET status='Active' WHERE id=?", (claim['item_id'],))
+>>>>>>> 675eecd2dbde899c0446afec0365b5b27fe8759b
         db.commit()
         add_timeline_event(claim['item_id'], "Claim Rejected", f"Claim by {claim['claimant_name']} rejected")
         log_audit("Reject Claim", f"Claim {claim_id} rejected", "Admin")
@@ -748,11 +958,19 @@ def dashboard():
         d = datetime.now() - timedelta(days=30 * i)
         month_str = d.strftime("%Y-%m")
         month_label = d.strftime("%b %Y")
+<<<<<<< HEAD
         lost_c  = cursor.execute("SELECT COUNT(*) FROM items WHERE type='Lost' AND date LIKE %s",
                                  (f"{month_str}%",)).fetchone()[0]
         found_c = cursor.execute("SELECT COUNT(*) FROM items WHERE type='Found' AND date LIKE %s",
                                  (f"{month_str}%",)).fetchone()[0]
         rec_c   = cursor.execute("SELECT COUNT(*) FROM items WHERE status='Recovered' AND date LIKE %s",
+=======
+        lost_c  = cursor.execute("SELECT COUNT(*) FROM items WHERE type='Lost' AND date LIKE ?",
+                                 (f"{month_str}%",)).fetchone()[0]
+        found_c = cursor.execute("SELECT COUNT(*) FROM items WHERE type='Found' AND date LIKE ?",
+                                 (f"{month_str}%",)).fetchone()[0]
+        rec_c   = cursor.execute("SELECT COUNT(*) FROM items WHERE status='Recovered' AND date LIKE ?",
+>>>>>>> 675eecd2dbde899c0446afec0365b5b27fe8759b
                                  (f"{month_str}%",)).fetchone()[0]
         months_data.append({'label': month_label, 'lost': lost_c, 'found': found_c, 'recovered': rec_c})
 
@@ -772,7 +990,11 @@ def dashboard():
     now = datetime.now()
     expiry_30 = cursor.execute(
         "SELECT s.*, i.description, i.category FROM storage s JOIN items i ON s.item_id=i.id "
+<<<<<<< HEAD
         "WHERE s.collected=0 AND s.expiry_date <= %s AND s.expiry_date > %s",
+=======
+        "WHERE s.collected=0 AND s.expiry_date <= ? AND s.expiry_date > ?",
+>>>>>>> 675eecd2dbde899c0446afec0365b5b27fe8759b
         ((now + timedelta(days=30)).strftime("%Y-%m-%d"),
          now.strftime("%Y-%m-%d"))
     ).fetchall()
@@ -814,11 +1036,19 @@ def add_staff_email():
             db = get_db()
             cursor = db.cursor()
             try:
+<<<<<<< HEAD
                 cursor.execute("INSERT INTO staff_emails (email) VALUES (%s)", (email,))
                 db.commit()
                 log_audit("Add Staff Email", f"Added '{email}'", "Admin")
                 flash(f"Staff email '{email}' added successfully.", "success")
             except psycopg2.errors.UniqueViolation:
+=======
+                cursor.execute("INSERT INTO staff_emails (email) VALUES (?)", (email,))
+                db.commit()
+                log_audit("Add Staff Email", f"Added '{email}'", "Admin")
+                flash(f"Staff email '{email}' added successfully.", "success")
+            except sqlite3.IntegrityError:
+>>>>>>> 675eecd2dbde899c0446afec0365b5b27fe8759b
                 flash("Email already exists.", "warning")
     else:
         flash("Email is required.", "danger")
@@ -830,9 +1060,15 @@ def add_staff_email():
 def delete_staff_email(id):
     db = get_db()
     cursor = db.cursor()
+<<<<<<< HEAD
     row = cursor.execute("SELECT email FROM staff_emails WHERE id=%s", (id,)).fetchone()
     if row:
         cursor.execute("DELETE FROM staff_emails WHERE id=%s", (id,))
+=======
+    row = cursor.execute("SELECT email FROM staff_emails WHERE id=?", (id,)).fetchone()
+    if row:
+        cursor.execute("DELETE FROM staff_emails WHERE id=?", (id,))
+>>>>>>> 675eecd2dbde899c0446afec0365b5b27fe8759b
         db.commit()
         log_audit("Delete Staff Email", f"Deleted '{row['email']}'", "Admin")
         flash(f"Staff email '{row['email']}' removed.", "info")
@@ -873,7 +1109,11 @@ def assign_storage():
     exp_date  = (datetime.now() + timedelta(days=days)).strftime("%Y-%m-%d")
 
     cursor.execute(
+<<<<<<< HEAD
         "INSERT INTO storage (item_id, rack_number, shelf_number, assigned_date, expiry_date) VALUES (%s,%s,%s,%s,%s)",
+=======
+        "INSERT INTO storage (item_id, rack_number, shelf_number, assigned_date, expiry_date) VALUES (?,?,?,?,?)",
+>>>>>>> 675eecd2dbde899c0446afec0365b5b27fe8759b
         (item_id, rack, shelf, datetime.now().strftime("%Y-%m-%d"), exp_date)
     )
     db.commit()
@@ -888,10 +1128,17 @@ def assign_storage():
 def mark_collected(storage_id):
     db = get_db()
     cursor = db.cursor()
+<<<<<<< HEAD
     row = cursor.execute("SELECT item_id FROM storage WHERE id=%s", (storage_id,)).fetchone()
     if row:
         cursor.execute("UPDATE storage SET collected=1 WHERE id=%s", (storage_id,))
         cursor.execute("UPDATE items SET status='Collected' WHERE id=%s", (row['item_id'],))
+=======
+    row = cursor.execute("SELECT item_id FROM storage WHERE id=?", (storage_id,)).fetchone()
+    if row:
+        cursor.execute("UPDATE storage SET collected=1 WHERE id=?", (storage_id,))
+        cursor.execute("UPDATE items SET status='Collected' WHERE id=?", (row['item_id'],))
+>>>>>>> 675eecd2dbde899c0446afec0365b5b27fe8759b
         db.commit()
         add_timeline_event(row['item_id'], "Collected", "Item collected from storage")
         log_audit("Mark Collected", f"Storage {storage_id}, item {row['item_id']}", "Admin")
@@ -911,9 +1158,15 @@ def analytics():
         d = datetime.now() - timedelta(days=30 * i)
         month_str = d.strftime("%Y-%m")
         month_label = d.strftime("%b %Y")
+<<<<<<< HEAD
         lost_c  = cursor.execute("SELECT COUNT(*) FROM items WHERE type='Lost'  AND date LIKE %s", (f"{month_str}%",)).fetchone()[0]
         found_c = cursor.execute("SELECT COUNT(*) FROM items WHERE type='Found' AND date LIKE %s", (f"{month_str}%",)).fetchone()[0]
         rec_c   = cursor.execute("SELECT COUNT(*) FROM items WHERE status='Recovered' AND date LIKE %s", (f"{month_str}%",)).fetchone()[0]
+=======
+        lost_c  = cursor.execute("SELECT COUNT(*) FROM items WHERE type='Lost'  AND date LIKE ?", (f"{month_str}%",)).fetchone()[0]
+        found_c = cursor.execute("SELECT COUNT(*) FROM items WHERE type='Found' AND date LIKE ?", (f"{month_str}%",)).fetchone()[0]
+        rec_c   = cursor.execute("SELECT COUNT(*) FROM items WHERE status='Recovered' AND date LIKE ?", (f"{month_str}%",)).fetchone()[0]
+>>>>>>> 675eecd2dbde899c0446afec0365b5b27fe8759b
         monthly.append({'label': month_label, 'lost': lost_c, 'found': found_c, 'recovered': rec_c})
 
     # Category stats
@@ -954,9 +1207,15 @@ def audit_log_view():
     query = "SELECT * FROM audit_log"
     params = []
     if action_filter:
+<<<<<<< HEAD
         query += " WHERE action LIKE %s"
         params.append(f"%{action_filter}%")
     query += " ORDER BY timestamp DESC LIMIT %s OFFSET %s"
+=======
+        query += " WHERE action LIKE ?"
+        params.append(f"%{action_filter}%")
+    query += " ORDER BY timestamp DESC LIMIT ? OFFSET ?"
+>>>>>>> 675eecd2dbde899c0446afec0365b5b27fe8759b
     params += [per_page, offset]
     logs = cursor.execute(query, params).fetchall()
     total = cursor.execute("SELECT COUNT(*) FROM audit_log").fetchone()[0]
@@ -976,7 +1235,11 @@ def announcements():
         ann_type = request.form.get('type', 'info')
         expires  = request.form.get('expires_at') or None
         cursor.execute(
+<<<<<<< HEAD
             "INSERT INTO announcements (title, message, type, created_at, expires_at) VALUES (%s,%s,%s,%s,%s)",
+=======
+            "INSERT INTO announcements (title, message, type, created_at, expires_at) VALUES (?,?,?,?,?)",
+>>>>>>> 675eecd2dbde899c0446afec0365b5b27fe8759b
             (title, message, ann_type, datetime.now().strftime("%Y-%m-%d %H:%M:%S"), expires)
         )
         db.commit()
@@ -992,7 +1255,11 @@ def announcements():
 def delete_announcement(id):
     db = get_db()
     cursor = db.cursor()
+<<<<<<< HEAD
     cursor.execute("UPDATE announcements SET active=0 WHERE id=%s", (id,))
+=======
+    cursor.execute("UPDATE announcements SET active=0 WHERE id=?", (id,))
+>>>>>>> 675eecd2dbde899c0446afec0365b5b27fe8759b
     db.commit()
     log_audit("Deactivate Announcement", f"ID {id}", "Admin")
     flash("Announcement deactivated.", "info")
@@ -1005,7 +1272,11 @@ def update_item_status(id):
     db = get_db()
     cursor = db.cursor()
     new_status = request.form['status']
+<<<<<<< HEAD
     cursor.execute("UPDATE items SET status=%s WHERE id=%s", (new_status, id))
+=======
+    cursor.execute("UPDATE items SET status=? WHERE id=?", (new_status, id))
+>>>>>>> 675eecd2dbde899c0446afec0365b5b27fe8759b
     db.commit()
     add_timeline_event(id, f"Status → {new_status}", f"Updated by Admin")
     log_audit("Update Status", f"Item {id} → {new_status}", "Admin")
@@ -1030,7 +1301,11 @@ def events():
         end_date   = request.form['end_date']
         desc       = request.form.get('description', '')
         cursor.execute(
+<<<<<<< HEAD
             "INSERT INTO events (name, event_type, location, start_date, end_date, description) VALUES (%s,%s,%s,%s,%s,%s)",
+=======
+            "INSERT INTO events (name, event_type, location, start_date, end_date, description) VALUES (?,?,?,?,?,?)",
+>>>>>>> 675eecd2dbde899c0446afec0365b5b27fe8759b
             (name, event_type, location, start_date, end_date, desc)
         )
         db.commit()
@@ -1042,7 +1317,11 @@ def events():
     # Count items per event
     event_items = {}
     for ev in all_events:
+<<<<<<< HEAD
         cnt = cursor.execute("SELECT COUNT(*) FROM items WHERE event_id=%s", (ev['id'],)).fetchone()[0]
+=======
+        cnt = cursor.execute("SELECT COUNT(*) FROM items WHERE event_id=?", (ev['id'],)).fetchone()[0]
+>>>>>>> 675eecd2dbde899c0446afec0365b5b27fe8759b
         event_items[ev['id']] = cnt
     return render_template('events.html', events=all_events, event_items=event_items)
 
@@ -1057,13 +1336,21 @@ def volunteers():
         role    = request.form.get('role', 'Helper')
         # Check if already registered
         existing = cursor.execute(
+<<<<<<< HEAD
             "SELECT id FROM volunteers WHERE contact=%s", (contact,)
+=======
+            "SELECT id FROM volunteers WHERE contact=?", (contact,)
+>>>>>>> 675eecd2dbde899c0446afec0365b5b27fe8759b
         ).fetchone()
         if existing:
             flash("You are already registered as a volunteer!", "warning")
         else:
             cursor.execute(
+<<<<<<< HEAD
                 "INSERT INTO volunteers (name, contact, role, registered_at) VALUES (%s,%s,%s,%s)",
+=======
+                "INSERT INTO volunteers (name, contact, role, registered_at) VALUES (?,?,?,?)",
+>>>>>>> 675eecd2dbde899c0446afec0365b5b27fe8759b
                 (name, contact, role, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
             )
             db.commit()
@@ -1101,7 +1388,11 @@ def add_story():
     submitted_by = request.form['submitted_by']
     cursor.execute(
         "INSERT INTO success_stories (item_id, title, story, recovery_days, submitted_by, submitted_at, approved) "
+<<<<<<< HEAD
         "VALUES (%s,%s,%s,%s,%s,%s,1)",
+=======
+        "VALUES (?,?,?,?,?,?,1)",
+>>>>>>> 675eecd2dbde899c0446afec0365b5b27fe8759b
         (item_id, title, story, rec_days, submitted_by,
          datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
     )
@@ -1118,6 +1409,7 @@ def profile(contact):
     db = get_db()
     cursor = db.cursor()
     submitted_items = cursor.execute(
+<<<<<<< HEAD
         "SELECT * FROM items WHERE contact=%s ORDER BY date DESC", (contact,)
     ).fetchall()
     claims_made = cursor.execute(
@@ -1130,6 +1422,20 @@ def profile(contact):
     ).fetchall()
     feedbacks   = cursor.execute(
         "SELECT * FROM feedback WHERE name=%s ORDER BY submitted_at DESC", (contact,)
+=======
+        "SELECT * FROM items WHERE contact=? ORDER BY date DESC", (contact,)
+    ).fetchall()
+    claims_made = cursor.execute(
+        "SELECT c.*, i.description, i.type FROM claims c "
+        "JOIN items i ON c.item_id=i.id WHERE c.claimant_contact=? ORDER BY c.submitted_at DESC",
+        (contact,)
+    ).fetchall()
+    user_badges = cursor.execute(
+        "SELECT * FROM badges WHERE contact=? ORDER BY earned_at DESC", (contact,)
+    ).fetchall()
+    feedbacks   = cursor.execute(
+        "SELECT * FROM feedback WHERE name=? ORDER BY submitted_at DESC", (contact,)
+>>>>>>> 675eecd2dbde899c0446afec0365b5b27fe8759b
     ).fetchall()
     # Stats
     user_stats = {
@@ -1154,7 +1460,11 @@ def submit_feedback(id):
     rating  = request.form['rating']
     comment = request.form['comment']
     cursor.execute(
+<<<<<<< HEAD
         "INSERT INTO feedback (item_id, name, rating, comment, submitted_at) VALUES (%s,%s,%s,%s,%s)",
+=======
+        "INSERT INTO feedback (item_id, name, rating, comment, submitted_at) VALUES (?,?,?,?,?)",
+>>>>>>> 675eecd2dbde899c0446afec0365b5b27fe8759b
         (id, name, rating, comment, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
     )
     db.commit()
@@ -1173,7 +1483,11 @@ def book_appointment():
     appt_date = request.form['appointment_date']
     time_slot = request.form['time_slot']
     cursor.execute(
+<<<<<<< HEAD
         "INSERT INTO appointments (item_id, name, contact, appointment_date, time_slot, created_at) VALUES (%s,%s,%s,%s,%s,%s)",
+=======
+        "INSERT INTO appointments (item_id, name, contact, appointment_date, time_slot, created_at) VALUES (?,?,?,?,?,?)",
+>>>>>>> 675eecd2dbde899c0446afec0365b5b27fe8759b
         (item_id, name, contact, appt_date, time_slot,
          datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
     )
@@ -1211,7 +1525,11 @@ def admin_logout():
 def contact_reporter(id):
     db = get_db()
     cursor = db.cursor()
+<<<<<<< HEAD
     item = cursor.execute("SELECT * FROM items WHERE id=%s", (id,)).fetchone()
+=======
+    item = cursor.execute("SELECT * FROM items WHERE id=?", (id,)).fetchone()
+>>>>>>> 675eecd2dbde899c0446afec0365b5b27fe8759b
     if not item:
         flash("Item not found.", "danger")
         return redirect(url_for('view_items'))
@@ -1375,7 +1693,11 @@ def api_search():
         return jsonify([])
     results = cursor.execute(
         "SELECT id, type, item_name, description, location, category, status "
+<<<<<<< HEAD
         "FROM items WHERE description LIKE %s OR item_name LIKE %s OR location LIKE %s "
+=======
+        "FROM items WHERE description LIKE ? OR item_name LIKE ? OR location LIKE ? "
+>>>>>>> 675eecd2dbde899c0446afec0365b5b27fe8759b
         "ORDER BY date DESC LIMIT 10",
         (f"%{q}%", f"%{q}%", f"%{q}%")
     ).fetchall()
@@ -1386,12 +1708,20 @@ def api_search():
 def api_nearby(id):
     db = get_db()
     cursor = db.cursor()
+<<<<<<< HEAD
     item = cursor.execute("SELECT category, location FROM items WHERE id=%s", (id,)).fetchone()
+=======
+    item = cursor.execute("SELECT category, location FROM items WHERE id=?", (id,)).fetchone()
+>>>>>>> 675eecd2dbde899c0446afec0365b5b27fe8759b
     if not item:
         return jsonify([])
     nearby = cursor.execute(
         "SELECT id, type, item_name, description, location, category, image "
+<<<<<<< HEAD
         "FROM items WHERE id!=%s AND (category=%s OR location=%s) AND status='Active' LIMIT 4",
+=======
+        "FROM items WHERE id!=? AND (category=? OR location=?) AND status='Active' LIMIT 4",
+>>>>>>> 675eecd2dbde899c0446afec0365b5b27fe8759b
         (id, item['category'], item['location'])
     ).fetchall()
     return jsonify([dict(n) for n in nearby])
